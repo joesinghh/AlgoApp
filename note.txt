@@ -1,0 +1,16 @@
+validations
+1. place order > order, trademanagement
+
+
+feature
+
+1. start from previously closed orders
+2. clear widget data and check if it's cleared in update function.
+
+Todo
+1. validations
+2. adding API option
+3. Kite place_order
+
+
+
