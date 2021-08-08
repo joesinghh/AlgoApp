@@ -5,13 +5,17 @@ from ifl_api import MarketApi
 from tkinter import messagebox
 import pandas as pd
 from datetime import date,datetime
-from demo import insert_data
+from demo import delete_data, fetch_data, insert_data, insert_data_main, fetch_data
 from Auto import AutocompleteCombobox
 import platform
+import time
+import xlrd
 
 date_today = str(date.today())
 
 dataframe = pd.read_excel("order_data.xlsx")
+pending_df = pd.read_excel('pending.xls')
+
 try :
     last_num = dataframe['SN'].iloc[-1]
 except IndexError:
@@ -141,8 +145,6 @@ def setexpiry():
     edate.set_completion_list(date)
 
 
-
-    
 def inable_all():
     strike = [s1,s2,s3,s4]
     for i in strike:
@@ -180,7 +182,6 @@ def setorder():
         messagebox.showerror("ERROR",e+" for Lot No.")
         return 0
         
-
     else:
         print(cp.get(),ls.get())
 
@@ -239,10 +240,10 @@ def update_order(n):
         price2.set(st2.get())
         
         price_thread1 = 1
-        price_thread2 = 2
+        price_thread2 = 1
 
         lsize_thread1 = 1
-        lsize_thread2 = 2
+        lsize_thread2 = 1
 
         
     elif n==4:
@@ -298,9 +299,8 @@ def update_order(n):
         price_thread3 = 1
 
         lsize_thread1 = 1
-        lsize_thread2 = 2
-        lsize_thread3 = 3
-
+        lsize_thread2 = 1
+        lsize_thread3 = 1
 
 
     else:
@@ -376,11 +376,12 @@ def update_order(n):
         price_thread4 = 1
 
         lsize_thread1 = 1
-        lsize_thread2 = 2
-        lsize_thread3 = 3
-        lsize_thread4 = 4
+        lsize_thread2 = 1
+        lsize_thread3 = 1
+        lsize_thread4 = 1
 
-    update_price_label()
+    update_thread = Thread(target=update_price_label,args=())
+    update_thread.start()
     update_lotlabel()
 
     
@@ -427,7 +428,7 @@ def clear():
 
 
 def set_top():
-    global top, scroll_frame
+    global top, scroll_frame, display_frame
 
     top = Toplevel()
     scroll_frame = ScrollFrame(top)
@@ -436,8 +437,8 @@ def set_top():
     display_frame = Frame(scroll_frame.viewPort,bg='blue')
     display_frame.pack(side='left',anchor=NW,fill='both',expand=1)
     display_frame.tkraise()
-    trade_frame = Frame(display_frame,bg='red')
-    trade_frame.pack(fill='both',expand=1,ipady=100)
+    trade_frame = Frame(display_frame,bg='white')
+    trade_frame.pack(fill='x',expand=1,ipady=100)
     trade_frame.tkraise()
 
     top.geometry('700x600')
@@ -451,6 +452,28 @@ def set_top():
     Label(trade_frame,text='Target',font=('Calibri',13)).place(x=290,y=20)
     Label(trade_frame,text='SL',font=('Calibri',13)).place(x=390,y=20)
     Label(trade_frame,text='P&L',font=('Calibri',13)).place(x=490,y=20)
+
+def order_api():
+    api_top.deiconify()
+
+def create_api_top():
+    global api_variable, api_top
+    api_top = Toplevel()
+    api_top.geometry('200x200')
+    api_top.resizable(0,0)
+    api_variable = IntVar()
+    api_variable.set(1)
+    
+    ifl = Radiobutton(api_top,text="IFL",variable=api_variable,value=1)
+    ifl.pack()
+
+    kite_api = Radiobutton(api_top,text='Kite',variable=api_variable,value=0)
+    kite_api.pack()
+
+    api_top.withdraw()
+    api_top.protocol('WM_DELETE_WINDOW',api_top.withdraw)
+
+
 
 
 def exit_order():
@@ -492,7 +515,6 @@ def update_price_label():
         t4.start()
 
 def price_update_thread1():
-    print("Price Thread")
     
     if instru1.get():
          
@@ -504,7 +526,6 @@ def price_update_thread1():
     
         try :
             _, id_ = get_instru_id(instru,o,exp1['value'][1],price1.get(),series)
-            print("ID ",id_)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
             if bs1.get()==1:
@@ -513,20 +534,19 @@ def price_update_thread1():
                 premium1.set(str(m_bid[0]))
 
         except Exception as e:
-            # print(e,"For price1")
+            print(e,"For price1")
             pass
 
     if price_thread1:
-        root.after(5000,price_update_thread1)
+        time.sleep(5)
+        price_update_thread1()
     else:
         return
 
 def price_update_thread2():
-    print("Price Thread")
     
     if instru2.get():
 
-        
         o = 'CE'
         instru = instru2.get()
         series='OPTSTK'
@@ -535,7 +555,6 @@ def price_update_thread2():
     
         try :
             _, id_ = get_instru_id(instru,o,exp2['value'][1],price2.get(),series)
-            print("ID ",id_)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
             if bs2.get()==1:
@@ -544,15 +563,15 @@ def price_update_thread2():
                 premium2.set(str(m_bid[0]))
 
         except Exception as e:
-            # print(e,"For price1")
+            print(e,"For price2")
             pass
-    if not price_thread2:
-        root.after(5000,price_update_thread2)
+    if price_thread2:
+        time.sleep(5)
+        price_update_thread2()
     else:
         return
 
 def price_update_thread3():
-    print("Price Thread")
     
     if instru3.get():
 
@@ -564,7 +583,6 @@ def price_update_thread3():
     
         try :
             _, id_ = get_instru_id(instru,o,exp3['value'][1],price3.get(),series)
-            print("ID ",id_)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
             if bs3.get()==1:
@@ -573,15 +591,15 @@ def price_update_thread3():
                 premium3.set(str(m_bid[0]))
 
         except Exception as e:
-            # print(e,"For price1")
+            print(e,"For price3")
             pass
-    if not price_thread3:
-        root.after(5000,price_update_thread3)
+    if price_thread3:
+        time.sleep(5)
+        price_update_thread3()
     else:
         return
 
 def price_update_thread4():
-    print("Price Thread")
     if instru4.get():
 
         o = 'CE'
@@ -592,7 +610,6 @@ def price_update_thread4():
     
         try :
             _, id_ = get_instru_id(instru,o,exp4['value'][1],price4.get(),series)
-            print("ID ",id_)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
             if bs4.get()==1:
@@ -601,10 +618,11 @@ def price_update_thread4():
                 premium4.set(str(m_bid[0]))
 
         except Exception as e:
-            # print(e,"For price1")
+            print(e,"For price4")
             pass
-    if not price_thread4:
-        root.after(5000,price_update_thread4)
+    if  price_thread4:
+        time.sleep(5)
+        price_update_thread4()
     else:
         return
     
@@ -638,7 +656,7 @@ def update_lotlabel():
 
 
 def set_lot_label1():
-    print("Thread")
+    print("Thread Lot size")
     if instru1.get() and exp1['value']:
         o = 'CE'
         instru = instru1.get()
@@ -652,12 +670,13 @@ def set_lot_label1():
         except Exception as e:
             print(e)
     if lsize_thread1:
-        root.after(5000,set_lot_label1)
+        time.sleep(5)
+        set_lot_label1()
     else:
         return
 
 def set_lot_label2():
-    print("Thread")
+    print("Thread lot2")
     if instru2.get() and exp2['value']:
         o = 'CE'
         instru = instru2.get()
@@ -671,12 +690,13 @@ def set_lot_label2():
         except Exception as e:
             print(e)
     if lsize_thread2:
-        root.after(5000,set_lot_label2)
+        time.sleep(5)
+        set_lot_label2()
     else:
         return
 
 def set_lot_label3():
-    print("Thread")
+    print("Thread lot3")
     if instru3.get() and exp3['value']:
         o = 'CE'
         instru = instru3.get()
@@ -690,12 +710,13 @@ def set_lot_label3():
         except Exception as e:
             print(e)
     if lsize_thread3:
-        root.after(5000,set_lot_label3)
+        time.sleep(5)
+        set_lot_label3()
     else:
         return
 
 def set_lot_label4():
-    print("Thread")
+    print("Thread lot4")
     if instru4.get() and exp4['value']:
         o = 'CE'
         instru = instru4.get()
@@ -709,7 +730,8 @@ def set_lot_label4():
         except Exception as e:
             print(e)
     if lsize_thread4:
-        root.after(5000,set_lot_label4)
+        time.sleep(5)
+        set_lot_label4()
     else:
         return
          
@@ -723,7 +745,7 @@ def place_realorder():
     quant = []
     data = None
     count = 0
-    for i in range(buy_sell):
+    for i in range(len(buy_sell)):
         if buy_sell[i]['state']=='normal':
             quant.append(lots[i][0].get()*int(lots[i][1].get()))
             count+=1
@@ -816,6 +838,14 @@ def place_realorder():
         # t.start()
         # insert_data(data,columns)
 
+def start_last_orders():
+    
+    dataframe = fetch_data('pending.xls')
+    for data in dataframe:
+        order = ManageOrder(data)
+        order.create_widgets()        
+        order.update_widgets()
+    
 
 def get_instru_id(symbol_,option,expiry,price_,series_):
     m = MarketApi()
@@ -834,10 +864,14 @@ def start_tmanage(data,y_value):
 
 class ManageOrder:
 
-    def __init__(self,data,y) :
+
+
+    def __init__(self,data) :
         self.sn = None
         self.data = data
-        self.y  = y
+        self.y  = 20
+        self.frame = Frame(display_frame,bg='blue')
+        self.frame.pack(fill='x',expand=1,ipady=50)
         self.quantity = data[24:28]
         self.instrument = data[2:6]
         self.bs = data[6:10]
@@ -855,6 +889,8 @@ class ManageOrder:
         self.num = data[0]
         self.quit = 0
         self.current_sop()
+        self.sdelta_variable = StringVar()
+        self.tdelta_variable = StringVar()
 
 
     def current_sop(self):
@@ -910,22 +946,24 @@ class ManageOrder:
         
 
     def create_widgets(self):
-        self.isop = Label(top,text=f"{self.initsop:.2f}")
+        self.isop = Label(self.frame,text=f"{self.initsop:.2f}")
         self.isop.place(x=40,y=self.y)
 
-        self.currsop = Label(top,text=f"{self.csop:.2f}")
+        self.currsop = Label(self.frame,text=f"{self.csop:.2f}")
         self.currsop.place(x=170,y=self.y)
-
-        self.sdelta = Label(top,text=f"{self.sl:.2f}")
+        
+        self.sdelta = Entry(self.frame,varible= self.sdelta_variable)
         self.sdelta.place(x=300,y=self.y)
+        self.sdelta_variable.set(f"{self.sl:.2f}")
 
-        self.p_and_l  = Label(top,text=f"{self.pl:.2f}")
+        self.p_and_l  = Label(self.frame,text=f"{self.pl:.2f}")
         self.p_and_l.place(x=500,y=self.y)
 
-        self.tdelta = Label(top,text=f"{self.target:.2f}")
+        self.tdelta = Entry(self.frame,varable=self.tdelta_variable)
         self.tdelta.place(x=400,y=self.y)
+        self.tdelta_variable.set(f"{self.target:.2f}")
 
-        self.exit_trade  = Button(top,text='Exit',command=self.destroy)
+        self.exit_trade  = Button(self.frame,text='Exit',command=self.destroy)
         self.exit_trade.place(x=600,y=self.y)
 
     def update_widgets(self,*args):
@@ -934,7 +972,13 @@ class ManageOrder:
             t = Thread(target=self.current_sop)
             t.start()
             print("update")
-            if  self.pl>= self.target or self.pl <self.sl:
+            time = datetime.now().time().strftime("%H:%M")
+            if time=="15:30":
+                self.pending_order()
+                self.destroy()
+                return
+
+            if  self.pl>= eval(self.tdelta_variable.get()) or self.pl < eval(self.sdelta_variable.get()):
                 for i in range(len(self.instrument)):
                     if self.instrument[i]!=None and self.instrument!='':
                         name = self.instrument[i]
@@ -956,12 +1000,34 @@ class ManageOrder:
             root.after(60000,self.update_widgets,self)
         else:
             print("DATA SAVED!")
-
+    
+    def pending_order(self):
+        new_data = [self.num,self.data[1],*self.instrument,*self.bs,*self.pc,self.sl,self.targetd,*self.strike_price,*self.expiry_data,*self.quantity,self.data[-2],self.csop]
+        t = Thread(target=insert_data,args=(new_data,columns,'pending.xls'))
+        t.start()
 
     def place_order(self,id_,slide,q):
         # t = Thread(target=self.market.place_order,args=(id_,slide,q))
         # t.start()
+        # t1 = Thread(target=delete_data,args=(self.data[0],self.data[1]))
+        # t1.start()
         print("order placed")
+
+    @staticmethod
+    def delete_data(sn, date):
+        data = pending_df[(pending_df[columns[0]==sn]) & (pending_df[columns[1]==date])]
+        if data:
+            row_count = 1
+            complete_data = fetch_data('pending.xls')
+            for d in complete_data:
+
+                if d[0]==sn and d[1]==date:
+                    break
+                row_count+=1
+            
+            delete_thread = Thread(target=delete_data,args=(row_count,))
+            delete_data.start()
+
 
 
 def dummy_buy_ask():
@@ -1016,6 +1082,15 @@ root = Tk()
 root.geometry("950x600")
 root.title("AlgoApp")
 
+try :
+
+    start_orders = Thread(target=start_last_orders)
+    start_orders.start()
+
+except xlrd.biffh.XLRDError:
+    print("Nothing to show")
+
+
 menu = Menu(root)
 submenu1 = Menu(menu,tearoff=0,activebackground='white',activeforeground="black")
 submenu1.add_command(label="PreorderScreen",command=preorderscreen,)
@@ -1023,6 +1098,8 @@ submenu1.add_command(label="OrderScreen",command=ordermenuscreen)
 submenu1.add_command(label="ManageTrade",command=tradescreen)
 submenu1.add_command(label="Login",command=sys_login)
 menu.add_cascade(menu=submenu1,label="Options")
+menu.add_command(label="Api",command=order_api)
+
 
 root.config(menu=menu)
 ### variables Preorder
@@ -1323,4 +1400,5 @@ Label(orderframe,bg='#707070').place(relwidth=1,height=3,x=0,y=355)
 ## Trade Management
 
 set_top()
+create_api_top()
 root.mainloop()

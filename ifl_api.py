@@ -105,8 +105,8 @@ class MarketApi(object):
 
     def checkresponse(self, response):
         if response.status_code!=200:
-            print(response.text)
-            print(response.status_code)
+            # print(response.text)
+            # print(response.status_code)
             return 0
         else:
             return 1
@@ -138,12 +138,12 @@ class MarketApi(object):
 
         r = requests.post(self.baseurl+self.getquoteurl,json = json,headers = self.headers)
         if(self.checkresponse(r)):
-            print(r.json())
+            # print(r.json())
             self.quote = eval(r.json()['result']['listQuotes'][0])
             self.bids = [self.quote['Bids'][0]['Price'],self.quote['Bids'][1]['Price'],self.quote['Bids'][2]['Price']]
             self.asks = [self.quote['Asks'][0]['Price'],self.quote['Asks'][1]['Price'],self.quote['Asks'][2]['Price']]
-            print(self.bids)
-            print(self.asks)
+            # print("BUY",self.bids[0])
+            # print("SELL",self.asks[0])
             return self.bids, self.asks
 
         else:
@@ -184,6 +184,7 @@ class MarketApi(object):
             return self.listexp
 
         else:
+            print("Data not avialable")
             return None
 
     def get_option_symbol(self,symbol,expirydate,otype,sprice,series,esegment=2):
