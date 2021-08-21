@@ -23,17 +23,12 @@ def insert_data(data,cols):
 
 def fetch_data(filename):
     df = pd.read_excel(filename)
-    return df.to_numpy.tolist()
+    return df.to_numpy().tolist()
 
 def delete_data(row_index):
-    book = load_workbook('prending.xls')
+    book = load_workbook('prending.xlsx')
     sheet = book['Sheet1']
     sheet.delete_rows(row_index)
-
-
-
-
-
 
 
 

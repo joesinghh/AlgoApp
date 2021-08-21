@@ -55,7 +55,7 @@ class Kite():
         sells = [r["data"][ins]["depth"]["sell"][0]["price"],r["data"][ins]["depth"]["sell"][1]["price"],r["data"][ins]["depth"]["sell"][2]["price"]]
         return bids, sells
   
-    def place_order(self, variety, exchange, symbol, t_type, quantity, product, order_type):
+    def place_order(self, variety='regular', exchange='NFO', symbol='FSL', t_type='BUY', quantity=1, product="MIS", order_type="MARKET"):
         self.cls.place_order(variety, exchange, symbol, t_type, quantity, product, order_type)
     
 

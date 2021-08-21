@@ -1,3 +1,4 @@
+import threading
 from tkinter import *
 from threading import Thread
 from tkinter.ttk import Combobox
@@ -10,11 +11,13 @@ from Auto import AutocompleteCombobox
 import platform
 import time
 import xlrd
+from Adapter import AdapterApi
+from exchange import exchange_name
 
 date_today = str(date.today())
 
 dataframe = pd.read_excel("order_data.xlsx")
-pending_df = pd.read_excel('pending.xls')
+pending_df = pd.read_excel('pending.xlsx')
 
 try :
     last_num = dataframe['SN'].iloc[-1]
@@ -43,6 +46,7 @@ lsize_thread2 = 0
 lsize_thread3 = 0
 lsize_thread4 = 0
 
+PlaceOrderClass = AdapterApi(None)
 
 class ScrollFrame(Frame):
     def __init__(self, parent):
@@ -124,11 +128,9 @@ def tradescreen():
     top.deiconify()
 
 
-def dummy_setexpiry(event):
-    Thread(target=setexpiry).start()
+def getexpiry():
 
-def setexpiry():
-    symbol = instu.get()
+    symbol = "NIFTY"
 
     s = "OPTSTK"
     if "NIFTY" in symbol:
@@ -141,8 +143,7 @@ def setexpiry():
         d = datetime.strptime(i,"%Y-%m-%d").date()
         date.append(str(d.strftime("%d%b%Y")))
     
-    edate['values'] = date
-    edate.set_completion_list(date)
+    return date
 
 
 def inable_all():
@@ -206,14 +207,9 @@ def update_order(n):
     if n in [1,2,3]:
         owidget_active()
         owidget_disable(2)
-        expiry_list = edate['values']
         s1instru.set(instru_value)
         s2instru.set(instru_value)
-        exp1['values']=expiry_list
-        exp1.set(expiry_date)
 
-        exp2['values']=expiry_list
-        exp2.set(expiry_date)
 
         l1.set(lots_num)
         l2.set(lots_num)
@@ -244,25 +240,20 @@ def update_order(n):
 
         lsize_thread1 = 1
         lsize_thread2 = 1
+        expiry1.set(expiry_date)
+        expiry2.set(expiry_date)
+
+
 
         
     elif n==4:
         owidget_active()
         owidget_disable(1)
-        expiry_list = edate['values']
 
         s1instru.set(instru_value)
         s2instru.set(instru_value)
         s3instru.set(instru_value)
 
-        exp1['values']=expiry_list
-        exp1.set(expiry_date)
-
-        exp2['values']=expiry_list
-        exp2.set(expiry_date)
-
-        exp3['values']=expiry_list
-        exp3.set(expiry_date)
 
         l1.set(lots_num)
         l2.set(lots_num)
@@ -301,32 +292,20 @@ def update_order(n):
         lsize_thread1 = 1
         lsize_thread2 = 1
         lsize_thread3 = 1
-
+        expiry1.set(expiry_date)
+        expiry2.set(expiry_date)
+        expiry3.set(expiry_date)
 
     else:
         owidget_active()
-        expiry_list = edate['values']
+
 
         s1instru.set(instru_value)
         s2instru.set(instru_value)
         s3instru.set(instru_value)
         s4instru.set(instru_value)
 
-        exp1['values']=expiry_list
-        exp1.set(expiry_date)
-        exp1.set_completion_list(expiry_list)
 
-        exp2['values']=expiry_list
-        exp2.set(expiry_date)
-        exp2.set_completion_list(expiry_list)
-
-        exp3['values']=expiry_list
-        exp3.set(expiry_date)
-        exp3.set_completion_list(expiry_list)
-
-        exp4['values']=expiry_list
-        exp4.set(expiry_date)
-        exp4.set_completion_list(expiry_list)
 
         l1.set(lots_num)
         l2.set(lots_num)
@@ -379,6 +358,11 @@ def update_order(n):
         lsize_thread2 = 1
         lsize_thread3 = 1
         lsize_thread4 = 1
+
+        expiry1.set(expiry_date)
+        expiry2.set(expiry_date)
+        expiry3.set(expiry_date)
+        expiry4.set(expiry_date)
 
     update_thread = Thread(target=update_price_label,args=())
     update_thread.start()
@@ -474,8 +458,6 @@ def create_api_top():
     api_top.protocol('WM_DELETE_WINDOW',api_top.withdraw)
 
 
-
-
 def exit_order():
     print("Order exited")
 
@@ -525,7 +507,7 @@ def price_update_thread1():
             series='OPTIDX'
     
         try :
-            _, id_ = get_instru_id(instru,o,exp1['value'][1],price1.get(),series)
+            _, id_ = get_instru_id(instru,o,expiry1.get(),price1.get(),series)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
             if bs1.get()==1:
@@ -554,7 +536,7 @@ def price_update_thread2():
             series='OPTIDX'
     
         try :
-            _, id_ = get_instru_id(instru,o,exp2['value'][1],price2.get(),series)
+            _, id_ = get_instru_id(instru,o,expiry2.get(),price2.get(),series)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
             if bs2.get()==1:
@@ -582,7 +564,7 @@ def price_update_thread3():
             series='OPTIDX'
     
         try :
-            _, id_ = get_instru_id(instru,o,exp3['value'][1],price3.get(),series)
+            _, id_ = get_instru_id(instru,o,expiry3.get(),price3.get(),series)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
             if bs3.get()==1:
@@ -609,9 +591,10 @@ def price_update_thread4():
             series='OPTIDX'
     
         try :
-            _, id_ = get_instru_id(instru,o,exp4['value'][1],price4.get(),series)
+            _, id_ = get_instru_id(instru,o,expiry4.get(),price4.get(),series)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
+            print(m_bid,m_ask)
             if bs4.get()==1:
                 premium4.set(str(m_ask[0]))
             else:
@@ -619,7 +602,7 @@ def price_update_thread4():
 
         except Exception as e:
             print(e,"For price4")
-            pass
+
     if  price_thread4:
         time.sleep(5)
         price_update_thread4()
@@ -797,27 +780,40 @@ def place_realorder():
             o = "PE"
             if pc[j]:
                 o = "CE"
-
-            _, id_ = get_instru_id(name,o,expiry_dates[j],strike_price[j],series)
             
-            m.get_quote(id_,2,1502)
-            
+            try:
+                _, id_ = get_instru_id(name,o,expiry_dates[j],strike_price[j],series)
+                print(id_)
+                m.get_quote(id_,2,1502)
+            except:
+                messagebox.showerror("An error occured.")
+                return
             if bs[j]:
                 price = m.bids[0]
                 isop-=price
-                bs_str = "BUY"
+                slide = "BUY"
             else:
                 price = m.asks[0]
                 isop+=price
-                bs_str = "SELL"
+                slide = "SELL"
 
             
             try:
-                pass
-                # place_thread = Thread(target=m.place_order,args=(id_,bs_str,quant[j]))
-                # place_thread.start()
+                Place = PlaceOrderClass
+                tsymbol = exchange_name(name, expiry_dates[j],strike_price[j],o)
+                print(tsymbol)
+                enctoken = '3f8HTtmNKzdu1RH0O+KQFCNELlOC1wKD/e4X5VXyuD5GUOVnhvj8taL1M1Q2J1hbw07ICz2FYdJbtLoZuL3cpRh2q+vArbykdgpcXE9aAU0E6/xg7K9FEg=='
+
+
+                def make_first_order(id_,slide,q,tradingsymbol,enctoken):
+                    Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,enctoken=enctoken)
+                    
+                place_thread = Thread(target=make_first_order,args=(id_,slide,25,tsymbol,enctoken))
+                place_thread.start()
+            
                 messagebox.showinfo("ORDER STATUS","Your order is placed!")
-            except :
+            except Exception as e:
+                print(e)
                 messagebox.showerror("ERROR","Oops something went wrong, Try again.")
                 return
 
@@ -831,6 +827,7 @@ def place_realorder():
 
         order = ManageOrder(data,y_value)
         order.create_widgets()
+        order.current_sop()
         order.update_widgets()
         y_value+=80
         preorderframe.tkraise()
@@ -840,10 +837,11 @@ def place_realorder():
 
 def start_last_orders():
     
-    dataframe = fetch_data('pending.xls')
+    dataframe = fetch_data('pending.xlsx')
     for data in dataframe:
         order = ManageOrder(data)
-        order.create_widgets()        
+        order.create_widgets()  
+        order.current_sop()      
         order.update_widgets()
     
 
@@ -865,11 +863,10 @@ def start_tmanage(data,y_value):
 class ManageOrder:
 
 
-
-    def __init__(self,data) :
+    def __init__(self,data,dummy_value_y) :
         self.sn = None
         self.data = data
-        self.y  = 20
+        self.y  = 50
         self.frame = Frame(display_frame,bg='blue')
         self.frame.pack(fill='x',expand=1,ipady=50)
         self.quantity = data[24:28]
@@ -885,10 +882,10 @@ class ManageOrder:
         self.pl = 0
         self.expiry_data = data[20:24]
         self.csop = self.initsop
-        self.market = MarketApi()
+        self.market = PlaceOrderClass
         self.num = data[0]
         self.quit = 0
-        self.current_sop()
+        # self.current_sop()
         self.sdelta_variable = StringVar()
         self.tdelta_variable = StringVar()
 
@@ -910,16 +907,19 @@ class ManageOrder:
 
                 _, id_ = get_instru_id(name,o,self.expiry_data[i],self.strike_price[i],series)
 
-                m = self.market
+                m = MarketApi()
+                print(id_)
                 m.get_quote(id_,2,1502)
             
                 if not self.bs[i]:
+                    
                     price = m.bids[0]
                     sop-=price
                 else:
                     price = m.asks[0]  
                     sop+=price
-
+                
+                print(price,self.instrument[i])
             else:
                 break
         
@@ -952,16 +952,16 @@ class ManageOrder:
         self.currsop = Label(self.frame,text=f"{self.csop:.2f}")
         self.currsop.place(x=170,y=self.y)
         
-        self.sdelta = Entry(self.frame,varible= self.sdelta_variable)
+        self.sdelta = Entry(self.frame,textvariable= self.sdelta_variable)
         self.sdelta.place(x=300,y=self.y)
         self.sdelta_variable.set(f"{self.sl:.2f}")
 
         self.p_and_l  = Label(self.frame,text=f"{self.pl:.2f}")
         self.p_and_l.place(x=500,y=self.y)
 
-        self.tdelta = Entry(self.frame,varable=self.tdelta_variable)
-        self.tdelta.place(x=400,y=self.y)
-        self.tdelta_variable.set(f"{self.target:.2f}")
+        self.tdelta = Entry(self.frame,textvariable=self.tdelta_variable)
+        # self.tdelta.place(x=400,y=self.y)
+        # self.tdelta_variable.set(f"{self.target:.2f}")
 
         self.exit_trade  = Button(self.frame,text='Exit',command=self.destroy)
         self.exit_trade.place(x=600,y=self.y)
@@ -978,7 +978,7 @@ class ManageOrder:
                 self.destroy()
                 return
 
-            if  self.pl>= eval(self.tdelta_variable.get()) or self.pl < eval(self.sdelta_variable.get()):
+            if (self.pl>=eval(self.tdelta_variable.get())) or (self.pl < eval(self.sdelta_variable.get())):
                 for i in range(len(self.instrument)):
                     if self.instrument[i]!=None and self.instrument!='':
                         name = self.instrument[i]
@@ -993,9 +993,10 @@ class ManageOrder:
                         slide = "BUY"
                         if self.bs:
                             slide = "SELL"
-                    
+                        
                         _, id_ = get_instru_id(name,o,self.expiry_data[i],self.strike_price[i],series)
-                        self.place_order(id_,slide,self.quantity[i],)
+                        tsymbol = exchange_name(name, self.expiry_data[i],self.strike_price[i],o)
+                        self.place_order(id_,slide,self.quantity[i],tsymbol,)
 
             root.after(60000,self.update_widgets,self)
         else:
@@ -1003,12 +1004,20 @@ class ManageOrder:
     
     def pending_order(self):
         new_data = [self.num,self.data[1],*self.instrument,*self.bs,*self.pc,self.sl,self.targetd,*self.strike_price,*self.expiry_data,*self.quantity,self.data[-2],self.csop]
-        t = Thread(target=insert_data,args=(new_data,columns,'pending.xls'))
+        t = Thread(target=insert_data,args=(new_data,columns,'pending.xlsx'))
         t.start()
 
-    def place_order(self,id_,slide,q):
-        # t = Thread(target=self.market.place_order,args=(id_,slide,q))
+    def place_order(self,id_,slide,q,tsymbol):
+        enctoken = '3f8HTtmNKzdu1RH0O+KQFCNELlOC1wKD/e4X5VXyuD5GUOVnhvj8taL1M1Q2J1hbw07ICz2FYdJbtLoZuL3cpRh2q+vArbykdgpcXE9aAU0E6/xg7K9FEg=='
+
+        # t = Thread(target=self.market.place_order,args=(id_,slide,q,tsymbol,enctoken))
         # t.start()
+        def make_order(id_,slide,q,tradingsymbol,enctoken):
+            self.market.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,enctoken=enctoken,)
+        
+        
+        t = Thread(target=make_order,args=(id_,slide,q,tsymbol,enctoken))
+        t.start()
         # t1 = Thread(target=delete_data,args=(self.data[0],self.data[1]))
         # t1.start()
         print("order placed")
@@ -1018,7 +1027,7 @@ class ManageOrder:
         data = pending_df[(pending_df[columns[0]==sn]) & (pending_df[columns[1]==date])]
         if data:
             row_count = 1
-            complete_data = fetch_data('pending.xls')
+            complete_data = fetch_data('pending.xlsx')
             for d in complete_data:
 
                 if d[0]==sn and d[1]==date:
@@ -1026,7 +1035,7 @@ class ManageOrder:
                 row_count+=1
             
             delete_thread = Thread(target=delete_data,args=(row_count,))
-            delete_data.start()
+            delete_thread.start()
 
 
 
@@ -1060,7 +1069,7 @@ def buy_ask_get():
         Ask_label['text'] = f"{m_ask[0]:.2f}"
     except Exception as e:
         print(e)
-        messagebox.showerror("Error","Oops, omething went wrong.\nTry again.")
+        messagebox.showerror("Error","Oops, something went wrong.\nTry again.")
         return 0
         
     
@@ -1161,6 +1170,8 @@ premium4 = IntVar()
 sdelta = IntVar()
 tdelta = IntVar()
 
+date_list = getexpiry()
+
 ## Frames
 
 mainframe = Frame(root,bg="white")
@@ -1219,7 +1230,6 @@ Label(preorderframe,text='Instrument',bg='white').place(x=340,y=200)
 instrument = AutocompleteCombobox(preorderframe,textvariable=instu,values=options)
 instrument.set_completion_list(options)
 instrument.place(x=320,y=278)
-instrument.bind("<<ComboboxSelected>>",dummy_setexpiry)
 
 Label(preorderframe,text='Bid :',bg='white').place(x=330,y=360)
 Bid_label = Label(preorderframe,text='None',fg='blue',bg='white')
@@ -1232,6 +1242,8 @@ Ask_label.place(x=480,y=360)
 Label(preorderframe,text='Expiry',bg='white').place(x=570,y=200)
 edate = AutocompleteCombobox(preorderframe,textvariable=expiry,)
 edate.place(x=550,y=278)
+# edate['values'] = date_list
+
 
 Label(preorderframe,text='No. Lot',bg='white').place(x=770,y=200)
 lot = Entry(preorderframe,textvariable=lots)
@@ -1331,6 +1343,22 @@ exp1.place(x=360,y=90)
 exp2.place(x=360,y=190)
 exp3.place(x=360,y=290)
 exp4.place(x=360,y=390)
+
+exp1['values']=date_list
+# exp1.set(date_list)
+# exp1.set_completion_list(date_list)
+
+exp2['values']=date_list
+# exp2.set(date_list)
+# exp2.set_completion_list(date_list)
+
+exp3['values']=date_list
+# exp3.set(date_list)
+# exp3.set_completion_list(date_list)
+
+exp4['values']=date_list
+# exp4.set(date_list)
+# exp4.set_completion_list(date_list)
 #
 list_exp = [exp4,exp3,exp2,exp1]
 Label(orderframe,text='Strike Price',bg='white').place(x=560,y=30)
