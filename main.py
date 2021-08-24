@@ -446,13 +446,16 @@ def create_api_top():
     api_top.geometry('200x200')
     api_top.resizable(0,0)
     api_variable = IntVar()
-    api_variable.set(1)
+    api_variable.set(3)
     
     ifl = Radiobutton(api_top,text="IFL",variable=api_variable,value=1)
     ifl.pack()
 
-    kite_api = Radiobutton(api_top,text='Kite',variable=api_variable,value=0)
+    kite_api = Radiobutton(api_top,text='Kite',variable=api_variable,value=2)
     kite_api.pack()
+
+    kite_free = Radiobutton(api_top,text='Kite Free',variable=api_variable,value=3)
+    kite_free.pack()
 
     api_top.withdraw()
     api_top.protocol('WM_DELETE_WINDOW',api_top.withdraw)
@@ -783,6 +786,7 @@ def place_realorder():
             
             try:
                 _, id_ = get_instru_id(name,o,expiry_dates[j],strike_price[j],series)
+                instru_lot_size = _
                 print(id_)
                 m.get_quote(id_,2,1502)
             except:
@@ -801,14 +805,14 @@ def place_realorder():
             try:
                 Place = PlaceOrderClass
                 tsymbol = exchange_name(name, expiry_dates[j],strike_price[j],o)
-                print(tsymbol)
+
                 enctoken = '3f8HTtmNKzdu1RH0O+KQFCNELlOC1wKD/e4X5VXyuD5GUOVnhvj8taL1M1Q2J1hbw07ICz2FYdJbtLoZuL3cpRh2q+vArbykdgpcXE9aAU0E6/xg7K9FEg=='
 
 
-                def make_first_order(id_,slide,q,tradingsymbol,enctoken):
-                    Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,enctoken=enctoken)
+                def make_first_order(id_,slide,q,tradingsymbol,enctoken,instru_lot_size):
+                    Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,enctoken=enctoken,size=instru_lot_size)
                     
-                place_thread = Thread(target=make_first_order,args=(id_,slide,25,tsymbol,enctoken))
+                place_thread = Thread(target=make_first_order,args=(id_,slide,25,tsymbol,enctoken,instru_lot_size))
                 place_thread.start()
             
                 messagebox.showinfo("ORDER STATUS","Your order is placed!")
@@ -973,7 +977,7 @@ class ManageOrder:
             t.start()
             print("update")
             time = datetime.now().time().strftime("%H:%M")
-            if time=="15:30":
+            if time=="15:00":
                 self.pending_order()
                 self.destroy()
                 return
@@ -995,8 +999,9 @@ class ManageOrder:
                             slide = "SELL"
                         
                         _, id_ = get_instru_id(name,o,self.expiry_data[i],self.strike_price[i],series)
+                        lot = _
                         tsymbol = exchange_name(name, self.expiry_data[i],self.strike_price[i],o)
-                        self.place_order(id_,slide,self.quantity[i],tsymbol,)
+                        self.place_order(id_,slide,self.quantity[i],tsymbol,lot)
 
             root.after(60000,self.update_widgets,self)
         else:
@@ -1007,16 +1012,16 @@ class ManageOrder:
         t = Thread(target=insert_data,args=(new_data,columns,'pending.xlsx'))
         t.start()
 
-    def place_order(self,id_,slide,q,tsymbol):
+    def place_order(self,id_,slide,q,tsymbol,size):
         enctoken = '3f8HTtmNKzdu1RH0O+KQFCNELlOC1wKD/e4X5VXyuD5GUOVnhvj8taL1M1Q2J1hbw07ICz2FYdJbtLoZuL3cpRh2q+vArbykdgpcXE9aAU0E6/xg7K9FEg=='
 
         # t = Thread(target=self.market.place_order,args=(id_,slide,q,tsymbol,enctoken))
         # t.start()
-        def make_order(id_,slide,q,tradingsymbol,enctoken):
-            self.market.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,enctoken=enctoken,)
+        def make_order(id_,slide,q,tradingsymbol,enctoken,instru_lot_size):
+            self.market.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,enctoken=enctoken,size=instru_lot_size)
         
         
-        t = Thread(target=make_order,args=(id_,slide,q,tsymbol,enctoken))
+        t = Thread(target=make_order,args=(id_,slide,q,tsymbol,enctoken,size))
         t.start()
         # t1 = Thread(target=delete_data,args=(self.data[0],self.data[1]))
         # t1.start()
@@ -1172,6 +1177,7 @@ tdelta = IntVar()
 
 date_list = getexpiry()
 
+
 ## Frames
 
 mainframe = Frame(root,bg="white")
@@ -1242,7 +1248,7 @@ Ask_label.place(x=480,y=360)
 Label(preorderframe,text='Expiry',bg='white').place(x=570,y=200)
 edate = AutocompleteCombobox(preorderframe,textvariable=expiry,)
 edate.place(x=550,y=278)
-# edate['values'] = date_list
+edate['values'] = date_list
 
 
 Label(preorderframe,text='No. Lot',bg='white').place(x=770,y=200)

@@ -12,7 +12,7 @@ class AdapterApi():
         else:
             self.value = None
 
-        print("CLASS IS ",self.cls)
+        # print("CLASS IS ",self.cls)
         
 
     def place_order(self,**kwargs):
@@ -23,16 +23,16 @@ class AdapterApi():
             self.cls.place_order(self.id_,self.slide,self.q)
 
         elif self.value==None:
-            data = f"tradingsymbol={self.tradingsymbol}&transaction_type={self.slide}&order_type=MARKET&quantity=25&disclosed_quantity=1&exchange=NFO&product=MIS"
+            data = f"tradingsymbol={self.tradingsymbol}&transaction_type={self.slide}&order_type=MARKET&quantity={self.size*self.q}&disclosed_quantity=1&exchange=NFO&product=MIS"
             header = {
                 'Content-Type':'application/x-www-form-urlencoded',
                 'Authorization':f'enctoken {self.enctoken}'
             }
-            print(self.tradingsymbol)
+            # print(self.tradingsymbol)
         
             r = requests.post('https://kite.zerodha.com/oms/orders/regular',data=data,headers=header,verify=False)
             print(r.status_code)
-            print(r.json())
+            # print(r.json())
             if r.status_code>300:
                 raise Exception("Can not place order")
             else:

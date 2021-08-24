@@ -16,11 +16,11 @@ Todo
 ## Tasks to make application work
 
 [X]. get price order 
-[]. change Put call value
-[]. change buy and sell value
+[]. change Put call value     
+[]. change buy and sell value 
 []. test application/debug 
 []. *fix trade management screen 
-[]. Quantity for kite free.
+[X]. Quantity for kite free.
 [X]. fetch expiry only once.
 
 
