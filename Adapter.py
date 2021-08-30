@@ -1,6 +1,8 @@
+from _typeshed import OpenTextModeWriting
 from kite_api import Kite
 from ifl_api import MarketApi
 import requests
+import json
 
 class AdapterApi():
     def __init__(self, cls):
@@ -23,7 +25,7 @@ class AdapterApi():
             self.cls.place_order(self.id_,self.slide,self.q)
 
         elif self.value==None:
-            data = f"tradingsymbol={self.tradingsymbol}&transaction_type={self.slide}&order_type=MARKET&quantity={self.size*self.q}&disclosed_quantity=1&exchange=NFO&product=MIS"
+            data = f"tradingsymbol={self.tradingsymbol}&transaction_type={self.slide}&order_type=MARKET&quantity={self.size*self.q}&disclosed_quantity=1&exchange=NFO&product={self.product_type}"
             header = {
                 'Content-Type':'application/x-www-form-urlencoded',
                 'Authorization':f'enctoken {self.enctoken}'
@@ -40,7 +42,47 @@ class AdapterApi():
 
         elif self.value==2:
             self.cls.place_order(exchange=self.exchange,symbol=self.symbol,t_type=self.ttype,quantity=self.q)
+    
+    def get_enctoken(self):
+        with open(".\\Tokens\\enctoken.txt") as f:
+            token = f.read()
+            if not token:
+                token = None
+            
+        return token
 
+    def login_kitefree():
+        f = open(".\\Config\\kitefree.json")
+        data = json.load(f)
+
+        userid = data['userid']
+        password = data['password']
+        twofa = data['twofa']
+
+        session = requests.Session()
+        
+        login1 = session.post('https://kite.zerodha.com/api/login',data={"user_id":userid,"password":password})
+        if login1.status_code>=300:
+            raise Exception("Can't login into zerodha")
+
+        print(login1.json())
+        request_id = login1.json()['data']['request_id']
+        
+        twofa_data = {
+            "request_id":request_id,
+            "user_id":userid,
+            "twofa_value":twofa
+        }
+        login2 = session.post("https://kite.zerodha.com/api/twofa",data=twofa_data)
+        if login2.status_code>=300:
+            raise Exception("Can't login into zerodha twofa")
+
+        enctoken = session.cookies()['enctoken']
+        return enctoken
+
+
+
+                
 
 if __name__=="__main__":
     a = AdapterApi(None)

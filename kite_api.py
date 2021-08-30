@@ -4,19 +4,22 @@ import os
 import re
 import requests
 import pandas as pd
+import json
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 class Kite():
     instruments = None
     def __init__(self):
-        self.key = int(os.getenv("kitekey"))
-        self.secretkey = int(os.getenv("secretkey")) 
+        f = open('.\\Config\\kite.json')
+        data = json.load(f)
+        self.key = data["kitekey"]
+        self.secretkey = data["secretkey"] 
         self.cls = KiteConnect(api_key=self.key)
         
         self.r_key = None
         self.session = None
         self.set_token()
         
-
     def set_token(self):
         with open("kite_access.txt","r") as f:
             self.r_key = f.read()

@@ -2,6 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 from requests.api import request
+import json
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 
@@ -13,18 +14,20 @@ true = True
 class MarketApi(object):
 
     def __init__(self):
-        self.secretKey = str(os.getenv("secretKey"))
-        self.appKey = str(os.getenv("appKey"))
-        self.source = str(os.getenv("source"))
-        self.isecretKey = str(os.getenv("isecretKey"))
-        self.iappKey = str(os.getenv("iappKey"))
-        self.isource = str(os.getenv("isource"))
+        f = open(".\\Config\\ifl.json")
+        self.data = json.load(f)
+        self.secretKey = self.data['marketdata']["secretKey"]
+        self.appKey = self.data['marketdata']["appKey"]
+        self.source = self.data['marketdata']["source"]
+        self.isecretKey = self.data['interactive']["secretKey"]
+        self.iappKey = self.data['marketdata']["appKey"]
+        self.isource = self.data['marketdata']["source"]
 
         self.instrument_id = None
         self.series = None
         self.cid = None
-        self.file  = "token.txt"
-        self.file2 = "token2.txt"
+        self.file  = ".\\Tokens\\token.txt"
+        self.file2 = ".\\Tokens\\token2.txt"
         self.placeurl = "/interactive/orders"
         self.baseurl_place = "https://ttblaze.iifl.com"
         self.baseurl = "https://ttblaze.iifl.com/apimarketdata"
@@ -51,7 +54,7 @@ class MarketApi(object):
             if(len(data)<=2):
                 self.login2()
                 fp.write(self.tokeni)
-                f = open("clientID.txt","r+")
+                f = open(".\\Tokens\\clientID.txt","r+")
                 f.write(self.cid)
                 f.close()
             else:
@@ -74,11 +77,11 @@ class MarketApi(object):
             self.cid = data['result']['clientCodes'][0]
             self.userid = data['result']['userID']
             self.isInvestorClient = data['result']['isInvestorClient']
-            with open("token2.txt",'w') as f:
+            with open(self.file2,'w') as f:
                 f.write(self.tokeni)
         
     def generate_cid(self):
-        with open("clientID.txt","r+") as fp:
+        with open(".\\Tokens\\clientID.txt","r+") as fp:
             data = fp.read()
             if(len(data)<1):
                 self.login()
@@ -98,7 +101,7 @@ class MarketApi(object):
         if self.checkresponse(r):
             print("Login successful")
             self.token = r.json()['result']['token']
-            with open("token.txt","w") as f:
+            with open(self.file,"w") as f:
                 f.write(self.token)
 
             self.set_header()

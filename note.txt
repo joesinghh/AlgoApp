@@ -15,13 +15,25 @@ Todo
 
 ## Tasks to make application work
 
+# Completed
 [X]. get price order 
-[]. change Put call value     
-[]. change buy and sell value 
-[]. test application/debug 
-[]. *fix trade management screen 
+[X]. change Put call value     
+[X]. change buy and sell value 
+[X]. Buy should be 1st always then sell at the time of placing order. 
+[X]. option for MIS and normal order type.
 [X]. Quantity for kite free.
 [X]. fetch expiry only once.
+[X]. Get user details from config file.
+[X]. get login url from zerodha.
+
+#Pending
+
+[]. test tomorrow 
+[]. Exit order is destroy T
+[]. Exit all T
+[]. Store completed order data in completed.xlsx
+[]. *fix trade management screen N
+[]. test application/debug 
 
 
 

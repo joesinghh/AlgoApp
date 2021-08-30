@@ -2,11 +2,13 @@ import threading
 from tkinter import *
 from threading import Thread
 from tkinter.ttk import Combobox
+
+from numpy.core.fromnumeric import product
 from ifl_api import MarketApi
 from tkinter import messagebox
 import pandas as pd
 from datetime import date,datetime
-from demo import delete_data, fetch_data, insert_data, insert_data_main, fetch_data
+from handlefile import delete_data, fetch_data, insert_data, insert_data_main, fetch_data
 from Auto import AutocompleteCombobox
 import platform
 import time
@@ -16,8 +18,11 @@ from exchange import exchange_name
 
 date_today = str(date.today())
 
-dataframe = pd.read_excel("order_data.xlsx")
-pending_df = pd.read_excel('pending.xlsx')
+BUY = "BUY"
+SELL = "SELL"
+
+dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
+pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
 
 try :
     last_num = dataframe['SN'].iloc[-1]
@@ -30,11 +35,6 @@ trade_threads  = 0
 y_value = 100
 
 mp = MarketApi()
-
-mp1 = MarketApi()
-mp2 = MarketApi()
-mp3 = MarketApi()
-mp4 = MarketApi()
 
 price_thread1 = 0
 price_thread2 = 0
@@ -110,12 +110,10 @@ def preorderscreen():
     preorderframe.tkraise()
 
 def orderscreen():
-    print("hello")
     orderframe.tkraise()
 
 def ordermenuscreen():
-    print("hello 1")
-
+    
     global price_thread1, price_thread2, price_thread3, price_thread4, lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4
     lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4 = 1, 1, 1, 1
     price_thread1, price_thread2, price_thread3, price_thread4 = 1, 1, 1, 1
@@ -184,7 +182,6 @@ def setorder():
         return 0
         
     else:
-        print(cp.get(),ls.get())
 
         update_order(cp.get())
         orderscreen()
@@ -215,15 +212,15 @@ def update_order(n):
         l2.set(lots_num)
 
         if ls.get()==1:
-            bs1.set(1)
-            bs2.set(0)
+            bs1.set(BUY)
+            bs2.set(SELL)
 
         else:
-            bs1.set(0)
-            bs2.set(1)
+            bs1.set(SELL)
+            bs2.set(BUY)
 
-        otype1.set(1)
-        otype2.set(1)
+        otype1.set("CE")
+        otype2.set("CE")
 
 
         num1, _ = get_instru_id(instru_value,"CE",expiry_date,st1.get(),s)
@@ -244,8 +241,6 @@ def update_order(n):
         expiry2.set(expiry_date)
 
 
-
-        
     elif n==4:
         owidget_active()
         owidget_disable(1)
@@ -260,18 +255,18 @@ def update_order(n):
         l3.set(lots_num)
 
         if ls.get()==1:
-            bs1.set(1)
-            bs2.set(0)
-            bs3.set(1)
+            bs1.set(BUY)
+            bs2.set(SELL)
+            bs3.set(BUY)
 
         else:
-            bs1.set(0)
-            bs2.set(1)
-            bs3.set(0)
+            bs1.set(SELL)
+            bs2.set(BUY)
+            bs3.set(SELL)
 
-        otype1.set(1)
-        otype2.set(1)
-        otype3.set(1)
+        otype1.set("CE")
+        otype2.set("CE")
+        otype3.set("CE")
 
         num1, _ = get_instru_id(instru_value,"CE",expiry_date,st1.get(),s)
         num2 = num1
@@ -311,38 +306,31 @@ def update_order(n):
         l2.set(lots_num)
         l3.set(lots_num)
         l4.set(lots_num)
-
-        if ls.get()==1:
-            bs1.set(1)
-            bs2.set(0)
-            bs3.set(1)
-            bs4.set(0)
-            otype1.set(1)
-            otype2.set(1)
-            otype3.set(0)
-            otype4.set(0)
-
-        else:
-            bs1.set(0)
-            bs2.set(1)
-            bs3.set(0)
-            bs4.set(1)
-            otype1.set(0)
-            otype2.set(0)
-            otype3.set(1)
-            otype4.set(1)
-
         num1, _ = get_instru_id(instru_value,"PE",expiry_date,st1.get(),s)
         num2, _ = get_instru_id(instru_value,"CE",expiry_date,st2.get(),s)
-        num3 = num1
-        num4 = num2
-        # into thread
-        
-        lotdata1.set(str(num1))
-        lotdata2.set(str(num2))
-        lotdata3.set(str(num3))
-        lotdata4.set(str(num4))
 
+
+        if ls.get()==1:
+            bs1.set(BUY)
+            bs2.set(SELL)
+            bs3.set(BUY)
+            bs4.set(SELL)
+
+
+        else:
+            bs1.set(SELL)
+            bs2.set(BUY)
+            bs3.set(SELL)
+            bs4.set(BUY)
+
+        otype1.set("CE")
+        otype2.set("CE")
+        otype3.set("PE")
+        otype4.set("PE")
+        lotdata1.set(str(num1))
+        lotdata2.set(str(num1))
+        lotdata3.set(str(num2))
+        lotdata4.set(str(num2))
 
         price1.set(st1.get())
         price2.set(st2.get())
@@ -474,7 +462,6 @@ def get_price(name,bs):
     
 def update_price_label():
     price_thread_list = [price_thread1, price_thread2,price_thread3, price_thread4]
-    print("Update price")
     if price_thread_list.count(1)==2:
         t1 = Thread(target=price_update_thread1,args=())
         t1.start()
@@ -501,9 +488,11 @@ def update_price_label():
 
 def price_update_thread1():
     
-    if instru1.get():
+    if instru1.get() and otype1.get():
          
         o = 'CE'
+        if otype1.get()=="PE":
+            o = "PE"
         instru = instru1.get()
         series='OPTSTK'
         if 'NIFTY' in instru:
@@ -530,9 +519,13 @@ def price_update_thread1():
 
 def price_update_thread2():
     
-    if instru2.get():
+    if instru2.get and otype2.get():
+
 
         o = 'CE'
+        if otype2.get()=="PE":
+            o = "PE"
+
         instru = instru2.get()
         series='OPTSTK'
         if 'NIFTY' in instru:
@@ -558,9 +551,11 @@ def price_update_thread2():
 
 def price_update_thread3():
     
-    if instru3.get():
+    if instru3.get() and otype3.get():
 
         o = 'CE'
+        if otype3.get()=="PE":
+            o = "PE"
         instru = instru3.get()
         series='OPTSTK'
         if 'NIFTY' in instru:
@@ -588,6 +583,9 @@ def price_update_thread4():
     if instru4.get():
 
         o = 'CE'
+        if otype4.get()=="PE":
+            o = "PE"
+
         instru = instru4.get()
         series='OPTSTK'
         if 'NIFTY' in instru:
@@ -614,7 +612,7 @@ def price_update_thread4():
     
 def update_lotlabel():
     lot_label_list = [lsize_thread1, lsize_thread2, lsize_thread3,lsize_thread4]
-    print("Update lotsize")
+
     if lot_label_list.count(1)==2:
         t1 = Thread(target=set_lot_label1,args=())
         t1.start()
@@ -640,18 +638,20 @@ def update_lotlabel():
         t4.start()
 
 
-
 def set_lot_label1():
-    print("Thread Lot size")
+
     if instru1.get() and exp1['value']:
         o = 'CE'
+        if otype1.get()=="PE":
+            o = "CE"
+
         instru = instru1.get()
         series='OPTSTK'
         if 'NIFTY' in instru:
             series='OPTIDX'
     
         try :
-            lotsize, id_ = get_instru_id(instru,o,exp1['value'][1],price1.get(),series)
+            lotsize, id_ = get_instru_id(instru,o,expiry1.get(),price1.get(),series)
             lotdata1.set(str(lotsize))
         except Exception as e:
             print(e)
@@ -662,16 +662,18 @@ def set_lot_label1():
         return
 
 def set_lot_label2():
-    print("Thread lot2")
+
     if instru2.get() and exp2['value']:
         o = 'CE'
+        if otype2.get()=="PE":
+            o = "PE"
         instru = instru2.get()
         series='OPTSTK'
         if 'NIFTY' in instru:
             series='OPTIDX'
     
         try :
-            lotsize, id_ = get_instru_id(instru,o,exp2['value'][1],price2.get(),series)
+            lotsize, id_ = get_instru_id(instru,o,expiry2.get(),price2.get(),series)
             lotdata2.set(str(lotsize))
         except Exception as e:
             print(e)
@@ -682,16 +684,19 @@ def set_lot_label2():
         return
 
 def set_lot_label3():
-    print("Thread lot3")
+
     if instru3.get() and exp3['value']:
         o = 'CE'
+        if otype3.get()=="PE":
+            o =  "PE"
+
         instru = instru3.get()
         series='OPTSTK'
         if 'NIFTY' in instru:
             series='OPTIDX'
     
         try :
-            lotsize, id_ = get_instru_id(instru,o,exp3['value'][1],price3.get(),series)
+            lotsize, id_ = get_instru_id(instru,o,expiry3.get(),price3.get(),series)
             lotdata3.set(str(lotsize))
         except Exception as e:
             print(e)
@@ -702,16 +707,19 @@ def set_lot_label3():
         return
 
 def set_lot_label4():
-    print("Thread lot4")
+
     if instru4.get() and exp4['value']:
         o = 'CE'
+        if otype4.get()=="PE":
+            o = "PE"
+
         instru = instru4.get()
         series='OPTSTK'
         if 'NIFTY' in instru:
             series='OPTIDX'
     
         try :
-            lotsize, id_ = get_instru_id(instru,o,exp4['value'][1],price4.get(),series)
+            lotsize, id_ = get_instru_id(instru,o,expiry4.get(),price4.get(),series)
             lotdata4.set(str(lotsize))
         except Exception as e:
             print(e)
@@ -726,17 +734,20 @@ def place_realorder():
     global last_num,trade_threads,y_value, price_thread1, price_thread2,\
     price_thread3, price_thread4
 
-    buy_sell = [s1b,s2b,s3b,s4b]
-    lots = [(l1,lotdata1),(l2,lotdata2),(l3,lotdata3),(l4,lotdata4)]
-    quant = []
+    product_value = product_type.get()
+    quant = [l1.get(),l2.get(),l3.get(),l4.get()]
     data = None
     count = 0
-    for i in range(len(buy_sell)):
-        if buy_sell[i]['state']=='normal':
-            quant.append(lots[i][0].get()*int(lots[i][1].get()))
-            count+=1
-        else:
-            quant.append(None)
+    # for i in range(len(buy_sell)):
+    #     if buy_sell[i]['state']=='normal':
+    #         quant.append(lots[i][0].get()*int(lots[i][1].get()))
+    #         count+=1
+    #     else:
+    #         quant.append(None)
+
+    print("Quantity",quant)
+        
+    # SORT ACCORDING TO BUY SELL
     
             
     i1 = s1instru.get()
@@ -755,8 +766,11 @@ def place_realorder():
     strike_price = [price1.get(),price2.get(),price3.get(),price4.get()]
     expiry_dates = [ex1,ex2,ex3,ex4]
 
-    buy_sell = [b1,b2,b3,b4]
+    # buy_sell = [b1,b2,b3,b4]
     instru = [i1,i2,i3,i4]
+
+    bs, pc, expiry_dates, instru, quant = zip(*sorted(zip(bs, pc, expiry_dates, instru, quant),key=lambda x: x[0]))
+
     isop = 0
     if count==2:
         data = [last_num+1,date_today,i1,i2,None,None,b1,b2,None,None,otype1.get(),
@@ -769,6 +783,7 @@ def place_realorder():
         data = [last_num+1,date_today,i1,i2,i3,i4,b1,b2,b3,b4,otype1.get(),
         otype2.get(),otype3.get(),otype4.get(),sdelta.get(),tdelta.get(),price1.get(),price2.get(),price3.get(),price4.get(),ex1,ex2,ex3,ex4,*quant,count]
     
+    data.append(product_value)
     m = MarketApi()
     if data !=None:
 
@@ -781,40 +796,36 @@ def place_realorder():
             if "NIFTY" in name:
                 series = "OPTIDX"
             o = "PE"
-            if pc[j]:
+            if pc[j]=="CE":
                 o = "CE"
             
             try:
                 _, id_ = get_instru_id(name,o,expiry_dates[j],strike_price[j],series)
                 instru_lot_size = _
-                print(id_)
                 m.get_quote(id_,2,1502)
             except:
                 messagebox.showerror("An error occured.")
                 return
-            if bs[j]:
+            if bs[j]==BUY:
                 price = m.bids[0]
                 isop-=price
-                slide = "BUY"
+                slide = BUY
             else:
                 price = m.asks[0]
                 isop+=price
-                slide = "SELL"
-
+                slide = SELL
             
             try:
                 Place = PlaceOrderClass
                 tsymbol = exchange_name(name, expiry_dates[j],strike_price[j],o)
 
-                enctoken = '3f8HTtmNKzdu1RH0O+KQFCNELlOC1wKD/e4X5VXyuD5GUOVnhvj8taL1M1Q2J1hbw07ICz2FYdJbtLoZuL3cpRh2q+vArbykdgpcXE9aAU0E6/xg7K9FEg=='
+                def make_first_order(id_,slide,q,tradingsymbol,instru_lot_size,product_type):
+                    Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,size=instru_lot_size,product_type=product_type)
 
-
-                def make_first_order(id_,slide,q,tradingsymbol,enctoken,instru_lot_size):
-                    Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,enctoken=enctoken,size=instru_lot_size)
-                    
-                place_thread = Thread(target=make_first_order,args=(id_,slide,25,tsymbol,enctoken,instru_lot_size))
-                place_thread.start()
-            
+                # place_thread = Thread(target=make_first_order,args=(id_,slide,quant[j],tsymbol,instru_lot_size))
+                # place_thread.start()
+                make_first_order(id_,slide,quant[j],tsymbol,instru_lot_size,product_type=product_value)
+                # create a variable to check if order is reallly placed
                 messagebox.showinfo("ORDER STATUS","Your order is placed!")
             except Exception as e:
                 print(e)
@@ -829,7 +840,7 @@ def place_realorder():
 
         data.append(isop)
 
-        order = ManageOrder(data,y_value)
+        order = ManageOrder(data)
         order.create_widgets()
         order.current_sop()
         order.update_widgets()
@@ -841,7 +852,7 @@ def place_realorder():
 
 def start_last_orders():
     
-    dataframe = fetch_data('pending.xlsx')
+    dataframe = fetch_data('.\\OrderData\\notcompleted.xlsx')
     for data in dataframe:
         order = ManageOrder(data)
         order.create_widgets()  
@@ -854,12 +865,12 @@ def get_instru_id(symbol_,option,expiry,price_,series_):
     lot , id_ = m.get_option_symbol(symbol=symbol_,otype=option,expirydate=expiry,sprice=price_,series=series_)
     return lot,id_
 
-def start_tmanage(data,y_value):
+def start_tmanage(data,):
     global trade_threads
     data_array = dataframe.values
 
     for i in data_array:
-        m1 = ManageOrder(i,y_value,)
+        m1 = ManageOrder(i,)
         m1.create_widgets()
         m1.update_widgets()
 
@@ -867,10 +878,11 @@ def start_tmanage(data,y_value):
 class ManageOrder:
 
 
-    def __init__(self,data,dummy_value_y) :
+    def __init__(self,data) :
         self.sn = None
         self.data = data
         self.y  = 50
+        self.product = data[-2]
         self.frame = Frame(display_frame,bg='blue')
         self.frame.pack(fill='x',expand=1,ipady=50)
         self.quantity = data[24:28]
@@ -912,7 +924,6 @@ class ManageOrder:
                 _, id_ = get_instru_id(name,o,self.expiry_data[i],self.strike_price[i],series)
 
                 m = MarketApi()
-                print(id_)
                 m.get_quote(id_,2,1502)
             
                 if not self.bs[i]:
@@ -964,8 +975,8 @@ class ManageOrder:
         self.p_and_l.place(x=500,y=self.y)
 
         self.tdelta = Entry(self.frame,textvariable=self.tdelta_variable)
-        # self.tdelta.place(x=400,y=self.y)
-        # self.tdelta_variable.set(f"{self.target:.2f}")
+        self.tdelta.place(x=400,y=self.y)
+        self.tdelta_variable.set(f"{self.target:.2f}")
 
         self.exit_trade  = Button(self.frame,text='Exit',command=self.destroy)
         self.exit_trade.place(x=600,y=self.y)
@@ -991,11 +1002,11 @@ class ManageOrder:
                             series = "OPTIDX"
 
                         o = "PE"
-                        if self.pc[i]:
+                        if self.pc[i]=="PE":
                             o = "CE"
                         
                         slide = "BUY"
-                        if self.bs:
+                        if self.bs=="BUY":
                             slide = "SELL"
                         
                         _, id_ = get_instru_id(name,o,self.expiry_data[i],self.strike_price[i],series)
@@ -1009,30 +1020,34 @@ class ManageOrder:
     
     def pending_order(self):
         new_data = [self.num,self.data[1],*self.instrument,*self.bs,*self.pc,self.sl,self.targetd,*self.strike_price,*self.expiry_data,*self.quantity,self.data[-2],self.csop]
-        t = Thread(target=insert_data,args=(new_data,columns,'pending.xlsx'))
+        t = Thread(target=insert_data,args=(new_data,columns,'.\\OrderData\\notcompleted.xlsx'))
         t.start()
 
     def place_order(self,id_,slide,q,tsymbol,size):
-        enctoken = '3f8HTtmNKzdu1RH0O+KQFCNELlOC1wKD/e4X5VXyuD5GUOVnhvj8taL1M1Q2J1hbw07ICz2FYdJbtLoZuL3cpRh2q+vArbykdgpcXE9aAU0E6/xg7K9FEg=='
 
         # t = Thread(target=self.market.place_order,args=(id_,slide,q,tsymbol,enctoken))
         # t.start()
-        def make_order(id_,slide,q,tradingsymbol,enctoken,instru_lot_size):
-            self.market.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,enctoken=enctoken,size=instru_lot_size)
+        def make_order(id_,slide,q,tradingsymbol,instru_lot_size,product_type):
+            nonlocal self
+            self.market.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,size=instru_lot_size,product_type=product_type)
         
         
-        t = Thread(target=make_order,args=(id_,slide,q,tsymbol,enctoken,size))
-        t.start()
+        try:
+            make_order(id_,slide,q,tsymbol,size,self.product_type)
+
         # t1 = Thread(target=delete_data,args=(self.data[0],self.data[1]))
         # t1.start()
-        print("order placed")
+            print("order placed")
+        except Exception as e:
+            print(e)
+            print("ERROR occured while square off order")
 
     @staticmethod
     def delete_data(sn, date):
         data = pending_df[(pending_df[columns[0]==sn]) & (pending_df[columns[1]==date])]
         if data:
             row_count = 1
-            complete_data = fetch_data('pending.xlsx')
+            complete_data = fetch_data('.\\OrderData\\notcompleted.xlsx')
             for d in complete_data:
 
                 if d[0]==sn and d[1]==date:
@@ -1041,8 +1056,6 @@ class ManageOrder:
             
             delete_thread = Thread(target=delete_data,args=(row_count,))
             delete_thread.start()
-
-
 
 def dummy_buy_ask():
     t = Thread(target=buy_ask_get)
@@ -1066,12 +1079,12 @@ def buy_ask_get():
     try :
 
         _, id_ = get_instru_id(instrument.get(),o,expiry.get(),st1.get(),series)
-        print("ID ",id_)
         m  = MarketApi()
         m_bid, m_ask = m.get_quote(id_,2,1502)
 
         Bid_label['text'] = f"{m_bid[0]:.2f}"
         Ask_label['text'] = f"{m_ask[0]:.2f}"
+
     except Exception as e:
         print(e)
         messagebox.showerror("Error","Oops, something went wrong.\nTry again.")
@@ -1132,20 +1145,20 @@ expiry = StringVar()
 
 ### Variables Order
 total_active = 4
-bs1 = IntVar()
-bs2 = IntVar()
-bs3 = IntVar()
-bs4 = IntVar()
+bs1 = StringVar()
+bs2 = StringVar()
+bs3 = StringVar()
+bs4 = StringVar()
 
 instru1 = StringVar()
 instru2 = StringVar()
 instru3 = StringVar()
 instru4 = StringVar()
 
-otype1 = IntVar()
-otype2 = IntVar()
-otype3 = IntVar()
-otype4 = IntVar()
+otype1 = StringVar()
+otype2 = StringVar()
+otype3 = StringVar()
+otype4 = StringVar()
 
 expiry1  = StringVar()
 expiry2  = StringVar()
@@ -1176,6 +1189,9 @@ sdelta = IntVar()
 tdelta = IntVar()
 
 date_list = getexpiry()
+
+product_type = StringVar()
+product_type.set("MIS")
 
 
 ## Frames
@@ -1266,16 +1282,16 @@ buy_ask.place(x=600,y=540)
 
 ### OrderFrame
 Label(orderframe,text='Order Type',bg='white').place(x=30,y=30)
-s1b = Radiobutton(orderframe, variable=bs1,text='BUY',value=1,bg='white')
-s1s = Radiobutton(orderframe, variable=bs1,text='SELL',value=0,bg='white')
-s2b = Radiobutton(orderframe, variable=bs2,text='BUY',value=1,bg='white')
-s2s = Radiobutton(orderframe, variable=bs2,text='SELL',value=0,bg='white')
+s1b = Radiobutton(orderframe, variable=bs1,text='BUY',value="BUY",bg='white')
+s1s = Radiobutton(orderframe, variable=bs1,text='SELL',value="SELL",bg='white')
+s2b = Radiobutton(orderframe, variable=bs2,text='BUY',value="BUY",bg='white')
+s2s = Radiobutton(orderframe, variable=bs2,text='SELL',value="SELL",bg='white')
 
-s3b = Radiobutton(orderframe, variable=bs3,text='BUY',value=1,bg='white')
-s3s = Radiobutton(orderframe, variable=bs3,text='SELL',value=0,bg='white')
+s3b = Radiobutton(orderframe, variable=bs3,text='BUY',value="BUY",bg='white')
+s3s = Radiobutton(orderframe, variable=bs3,text='SELL',value="SELL",bg='white')
 
-s4b = Radiobutton(orderframe, variable=bs4,text='BUY',value=1,bg='white')
-s4s = Radiobutton(orderframe, variable=bs4,text='SELL',value=0,bg='white')
+s4b = Radiobutton(orderframe, variable=bs4,text='BUY',value="BUY",bg='white')
+s4s = Radiobutton(orderframe, variable=bs4,text='SELL',value="SELL",bg='white')
 
 list_b = [s4b,s3b,s2b,s1b]
 list_s = [s4s,s3s,s2s,s1s]
@@ -1313,17 +1329,17 @@ s3instru.place(x=120,y = 290)
 s4instru.place(x=120,y = 390)
 
 Label(orderframe,text="Option Type",bg='white')
-s1p = Radiobutton(orderframe, variable=otype1,text="PUT",value=0,bg='white')
-s1c = Radiobutton(orderframe, variable=otype1,text="CALL",value=1,bg='white')
+s1p = Radiobutton(orderframe, variable=otype1,text="PUT",value="PE",bg='white')
+s1c = Radiobutton(orderframe, variable=otype1,text="CALL",value="CE",bg='white')
 
-s2p = Radiobutton(orderframe, variable=otype2,text="PUT",value=0,bg='white')
-s2c = Radiobutton(orderframe, variable=otype2,text="CALL",value=1,bg='white')
+s2p = Radiobutton(orderframe, variable=otype2,text="PUT",value="PE",bg='white')
+s2c = Radiobutton(orderframe, variable=otype2,text="CALL",value="CE",bg='white')
 
-s3p = Radiobutton(orderframe, variable=otype3,text="PUT",value=0,bg='white')
-s3c = Radiobutton(orderframe, variable=otype3,text="CALL",value=1,bg='white')
+s3p = Radiobutton(orderframe, variable=otype3,text="PUT",value="PE",bg='white')
+s3c = Radiobutton(orderframe, variable=otype3,text="CALL",value="CE",bg='white')
 
-s4p = Radiobutton(orderframe, variable=otype4,text="PUT",value=0,bg='white')
-s4c = Radiobutton(orderframe, variable=otype4,text="CALL",value=1,bg='white')
+s4p = Radiobutton(orderframe, variable=otype4,text="PUT",value="PE",bg='white')
+s4c = Radiobutton(orderframe, variable=otype4,text="CALL",value="CE",bg='white')
 
 s1p.place(x=280,y=80)
 s1c.place(x=280,y=120)
@@ -1431,6 +1447,11 @@ Label(orderframe,bg='#0a9cf0').place(relwidth=1,height=5,x=0,y=60)
 Label(orderframe,bg='#707070').place(relwidth=1,height=3,x=0,y=155)
 Label(orderframe,bg='#707070').place(relwidth=1,height=3,x=0,y=255)
 Label(orderframe,bg='#707070').place(relwidth=1,height=3,x=0,y=355)
+
+mis = Radiobutton(orderframe,text="MIS",bg='white',value="MIS",variable=product_type)
+mis.place(x=780,y=490)
+normal = Radiobutton(orderframe,text="NORMAL",bg='white',value="NORMAL",variable=product_type)
+normal.place(x=780,y=520)
 ## Trade Management
 
 set_top()
