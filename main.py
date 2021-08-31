@@ -117,6 +117,7 @@ def ordermenuscreen():
     global price_thread1, price_thread2, price_thread3, price_thread4, lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4
     lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4 = 1, 1, 1, 1
     price_thread1, price_thread2, price_thread3, price_thread4 = 1, 1, 1, 1
+
     update_price_label()
     update_lotlabel()
     orderframe.tkraise()
@@ -733,22 +734,15 @@ def place_realorder():
 
     global last_num,trade_threads,y_value, price_thread1, price_thread2,\
     price_thread3, price_thread4
-
+    
     product_value = product_type.get()
     quant = [l1.get(),l2.get(),l3.get(),l4.get()]
     data = None
-    count = 0
-    # for i in range(len(buy_sell)):
-    #     if buy_sell[i]['state']=='normal':
-    #         quant.append(lots[i][0].get()*int(lots[i][1].get()))
-    #         count+=1
-    #     else:
-    #         quant.append(None)
+    count = 4 - quant.count(0)
+
 
     print("Quantity",quant)
         
-    # SORT ACCORDING TO BUY SELL
-    
             
     i1 = s1instru.get()
     i2 = s2instru.get()
@@ -768,9 +762,16 @@ def place_realorder():
 
     # buy_sell = [b1,b2,b3,b4]
     instru = [i1,i2,i3,i4]
+    
 
-    bs, pc, expiry_dates, instru, quant = zip(*sorted(zip(bs, pc, expiry_dates, instru, quant),key=lambda x: x[0]))
 
+
+    bs, pc, expiry_dates, instru, quant, strike_price = zip(*sorted(zip(bs, pc, expiry_dates, instru, quant,strike_price),key=lambda x: x[0]))
+    # print("instru:",instru)
+    # print("PC",pc)
+    # print(expiry)
+    # print(quant)
+    # print(bs)
     isop = 0
     if count==2:
         data = [last_num+1,date_today,i1,i2,None,None,b1,b2,None,None,otype1.get(),
@@ -789,21 +790,25 @@ def place_realorder():
 
         last_num+=1
 
-        for j in range(0,count):
+        for j in range(4-count,4):
             
             name = instru[j]
             series = "OPTSTK"
             if "NIFTY" in name:
                 series = "OPTIDX"
-            o = "PE"
-            if pc[j]=="CE":
-                o = "CE"
+            o = "CE"
+            if pc[j]=="PE":
+                o = "PE"
+            
+            print("data for place order")
+            print("name ;",name,"PC",pc[j],expiry_dates[j],strike_price[j],series)
             
             try:
                 _, id_ = get_instru_id(name,o,expiry_dates[j],strike_price[j],series)
                 instru_lot_size = _
                 m.get_quote(id_,2,1502)
             except:
+                print("am i a bug?")
                 messagebox.showerror("An error occured.")
                 return
             if bs[j]==BUY:
@@ -829,6 +834,7 @@ def place_realorder():
                 messagebox.showinfo("ORDER STATUS","Your order is placed!")
             except Exception as e:
                 print(e)
+                print("YES")
                 messagebox.showerror("ERROR","Oops something went wrong, Try again.")
                 return
 
@@ -926,7 +932,7 @@ class ManageOrder:
                 m = MarketApi()
                 m.get_quote(id_,2,1502)
             
-                if not self.bs[i]:
+                if self.bs[i]==SELL:
                     
                     price = m.bids[0]
                     sop-=price
@@ -1002,7 +1008,7 @@ class ManageOrder:
                             series = "OPTIDX"
 
                         o = "PE"
-                        if self.pc[i]=="PE":
+                        if self.pc[i]=="CE":
                             o = "CE"
                         
                         slide = "BUY"
@@ -1031,9 +1037,8 @@ class ManageOrder:
             nonlocal self
             self.market.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,size=instru_lot_size,product_type=product_type)
         
-        
         try:
-            make_order(id_,slide,q,tsymbol,size,self.product_type)
+            make_order(id_,slide,q,tsymbol,size,self.product)
 
         # t1 = Thread(target=delete_data,args=(self.data[0],self.data[1]))
         # t1.start()
@@ -1098,8 +1103,19 @@ def sys_login():
             mp = MarketApi()
             mp.login()
             mp.logini()
+
         except Exception as e:
             messagebox.showerror("Login Error",str(e))
+        
+    t = Thread(target=login,args=())
+    t.start()
+
+def kite_free_login():
+
+    def login():
+        adpt = AdapterApi(None)
+        adpt.login_kitefree()
+
     t = Thread(target=login,args=())
     t.start()
 
@@ -1123,8 +1139,14 @@ submenu1 = Menu(menu,tearoff=0,activebackground='white',activeforeground="black"
 submenu1.add_command(label="PreorderScreen",command=preorderscreen,)
 submenu1.add_command(label="OrderScreen",command=ordermenuscreen)
 submenu1.add_command(label="ManageTrade",command=tradescreen)
-submenu1.add_command(label="Login",command=sys_login)
+submenu2 = Menu(menu,tearoff=0,activebackground='white',activeforeground="black")
+
+submenu2.add_command(label="IFL Login",command=sys_login)
+submenu2.add_command(label="Kite Free",command=kite_free_login)
+submenu2.add_command(label="Kite API")
+
 menu.add_cascade(menu=submenu1,label="Options")
+menu.add_cascade(menu=submenu2,label="Login")
 menu.add_command(label="Api",command=order_api)
 
 
@@ -1450,7 +1472,7 @@ Label(orderframe,bg='#707070').place(relwidth=1,height=3,x=0,y=355)
 
 mis = Radiobutton(orderframe,text="MIS",bg='white',value="MIS",variable=product_type)
 mis.place(x=780,y=490)
-normal = Radiobutton(orderframe,text="NORMAL",bg='white',value="NORMAL",variable=product_type)
+normal = Radiobutton(orderframe,text="NRML",bg='white',value="NRML",variable=product_type)
 normal.place(x=780,y=520)
 ## Trade Management
 

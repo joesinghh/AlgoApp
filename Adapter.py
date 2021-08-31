@@ -1,12 +1,13 @@
-from _typeshed import OpenTextModeWriting
 from kite_api import Kite
 from ifl_api import MarketApi
 import requests
 import json
 
 class AdapterApi():
+
     def __init__(self, cls):
         self.cls = cls
+        self.enctoken = None
         if isinstance(self.cls,MarketApi):
             self.value = 1
         elif isinstance(self.cls,Kite):
@@ -25,6 +26,7 @@ class AdapterApi():
             self.cls.place_order(self.id_,self.slide,self.q)
 
         elif self.value==None:
+            self.get_enctoken()
             data = f"tradingsymbol={self.tradingsymbol}&transaction_type={self.slide}&order_type=MARKET&quantity={self.size*self.q}&disclosed_quantity=1&exchange=NFO&product={self.product_type}"
             header = {
                 'Content-Type':'application/x-www-form-urlencoded',
@@ -36,7 +38,9 @@ class AdapterApi():
             print(r.status_code)
             # print(r.json())
             if r.status_code>300:
+                print(r.json())
                 raise Exception("Can not place order")
+                
             else:
                 print(r.json()) 
 
@@ -44,14 +48,15 @@ class AdapterApi():
             self.cls.place_order(exchange=self.exchange,symbol=self.symbol,t_type=self.ttype,quantity=self.q)
     
     def get_enctoken(self):
-        with open(".\\Tokens\\enctoken.txt") as f:
+        with open(".\\Tokens\\enctoken.txt","r") as f:
             token = f.read()
             if not token:
-                token = None
-            
-        return token
+                self.login_kitefree()
+            else:
+                self.enctoken = token
 
-    def login_kitefree():
+
+    def login_kitefree(self):
         f = open(".\\Config\\kitefree.json")
         data = json.load(f)
 
@@ -65,7 +70,7 @@ class AdapterApi():
         if login1.status_code>=300:
             raise Exception("Can't login into zerodha")
 
-        print(login1.json())
+        # print(login1.json())
         request_id = login1.json()['data']['request_id']
         
         twofa_data = {
@@ -76,22 +81,21 @@ class AdapterApi():
         login2 = session.post("https://kite.zerodha.com/api/twofa",data=twofa_data)
         if login2.status_code>=300:
             raise Exception("Can't login into zerodha twofa")
+        
+        # print(login2.json())
+        enctoken = session.cookies['enctoken']
+        print(enctoken)
+        with open(".\\Tokens\\enctoken.txt","w")as file:
+            file.write(enctoken)
+            self.enctoken = enctoken
+            print("Login Successful, enctoken generated")
 
-        enctoken = session.cookies()['enctoken']
-        return enctoken
 
-
-
-                
 
 if __name__=="__main__":
     a = AdapterApi(None)
 
-    enctoken = '3f8HTtmNKzdu1RH0O+KQFCNELlOC1wKD/e4X5VXyuD5GUOVnhvj8taL1M1Q2J1hbw07ICz2FYdJbtLoZuL3cpRh2q+vArbykdgpcXE9aAU0E6/xg7K9FEg=='
-    q = 1
-    tradingsymbol = 'BANKNIFTY21AUG35500CE'
-    slide = 'BUY'
-    a.place_order(q=q,tradingsymbol=tradingsymbol,enctoken=enctoken,slide=slide)
+    a.login_kitefree()
 
 
 

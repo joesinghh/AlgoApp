@@ -20,8 +20,8 @@ class MarketApi(object):
         self.appKey = self.data['marketdata']["appKey"]
         self.source = self.data['marketdata']["source"]
         self.isecretKey = self.data['interactive']["secretKey"]
-        self.iappKey = self.data['marketdata']["appKey"]
-        self.isource = self.data['marketdata']["source"]
+        self.iappKey = self.data['interactive']["appKey"]
+        self.isource = self.data['interactive']["source"]
 
         self.instrument_id = None
         self.series = None
@@ -108,7 +108,7 @@ class MarketApi(object):
 
     def checkresponse(self, response):
         if response.status_code!=200:
-            print(response.text)
+            # print(response.text)
             # print(response.status_code)
             return 0
         else:
@@ -138,18 +138,18 @@ class MarketApi(object):
             "xtsMessageCode": xts,
             "publishFormat" : publish
         }
-        print("ID :",instrument_id)
+        # print("ID :",instrument_id)
 
 
         r = requests.post(self.baseurl+self.getquoteurl,json = json,headers = self.headers)
         if(self.checkresponse(r)):
             # print(r.json())
             self.quote = eval(r.json()['result']['listQuotes'][0])
-            print(self.quote)
+            # print(self.quote)
             self.bids = [self.quote['Bids'][0]['Price'],self.quote['Bids'][1]['Price'],self.quote['Bids'][2]['Price']]
             self.asks = [self.quote['Asks'][0]['Price'],self.quote['Asks'][1]['Price'],self.quote['Asks'][2]['Price']]
-            print("BUY",self.bids[0])
-            print("SELL",self.asks[0])
+            # print("BUY",self.bids[0])
+            # print("SELL",self.asks[0])
             return self.bids, self.asks
 
         else:
@@ -233,4 +233,4 @@ class MarketApi(object):
         if (self.checkresponse(r)):
             data  = r.json()
             self.orderid = data['result']['AppOrderID']
-            print("Status : %s"%data['type'])
+            # print("Status : %s"%data['type'])

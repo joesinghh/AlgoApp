@@ -16,11 +16,12 @@ Todo
 ## Tasks to make application work
 
 # Completed
+
 [X]. get price order 
 [X]. change Put call value     
 [X]. change buy and sell value 
 [X]. Buy should be 1st always then sell at the time of placing order. 
-[X]. option for MIS and normal order type.
+[X]. option for MIS and normal product type.
 [X]. Quantity for kite free.
 [X]. fetch expiry only once.
 [X]. Get user details from config file.
@@ -28,12 +29,14 @@ Todo
 
 #Pending
 
-[]. test tomorrow 
-[]. Exit order is destroy T
-[]. Exit all T
+[]. FIX Exit order 
+[]. FIX Exit all order
+[]. Fix BUY/SELL square off.
+[]. manage 0 for sldelta and tdelta.
+[]. Fix widget bugs.
 []. Store completed order data in completed.xlsx
-[]. *fix trade management screen N
-[]. test application/debug 
+[]. *fix trade management screen. 
+[]. test application/debug.
 
 
 
