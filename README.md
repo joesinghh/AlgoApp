@@ -4,10 +4,12 @@
 
 ### INSTALLATION
 
-Install required modules
+Install required modules : 
+
 ```pip install -r requirements.txt```
 
-Run `main.py`
+Run `main.py` : 
+
 ```python main.py```
 
 ### USEAGE
