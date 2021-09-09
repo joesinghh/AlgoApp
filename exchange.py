@@ -24,7 +24,7 @@ def exchange_name(instru, expiry, strike_price, call):
     
     if type(strike_price)!=str:
         strike_price = str(strike_price)
-        
+    print("EXPIRY ",expiry)
     date = datetime.date(datetime.strptime(expiry,"%d%b%Y"))
     year = str(date.year)
     month = date.month

@@ -2,6 +2,7 @@ from kite_api import Kite
 from ifl_api import MarketApi
 import requests
 import json
+from tkinter import messagebox
 
 class AdapterApi():
 
@@ -14,9 +15,6 @@ class AdapterApi():
             self.value = 2
         else:
             self.value = None
-
-        # print("CLASS IS ",self.cls)
-        
 
     def place_order(self,**kwargs):
         self.__dict__.update(kwargs)
@@ -39,7 +37,7 @@ class AdapterApi():
             # print(r.json())
             if r.status_code>300:
                 print(r.json())
-                raise Exception("Can not place order")
+                raise Exception(r.json()['message'])
                 
             else:
                 print(r.json()) 
@@ -68,7 +66,8 @@ class AdapterApi():
         
         login1 = session.post('https://kite.zerodha.com/api/login',data={"user_id":userid,"password":password})
         if login1.status_code>=300:
-            raise Exception("Can't login into zerodha")
+            raise Exception(login1.json()['message'])
+            
 
         # print(login1.json())
         request_id = login1.json()['data']['request_id']
@@ -80,7 +79,7 @@ class AdapterApi():
         }
         login2 = session.post("https://kite.zerodha.com/api/twofa",data=twofa_data)
         if login2.status_code>=300:
-            raise Exception("Can't login into zerodha twofa")
+            raise Exception(login2.json()['message'])
         
         # print(login2.json())
         enctoken = session.cookies['enctoken']
@@ -96,11 +95,3 @@ if __name__=="__main__":
     a = AdapterApi(None)
 
     a.login_kitefree()
-
-
-
-
-        
-    
-    
-

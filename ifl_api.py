@@ -143,7 +143,6 @@ class MarketApi(object):
 
         r = requests.post(self.baseurl+self.getquoteurl,json = json,headers = self.headers)
         if(self.checkresponse(r)):
-            # print(r.json())
             self.quote = eval(r.json()['result']['listQuotes'][0])
             # print(self.quote)
             self.bids = [self.quote['Bids'][0]['Price'],self.quote['Bids'][1]['Price'],self.quote['Bids'][2]['Price']]
@@ -187,10 +186,12 @@ class MarketApi(object):
         r = requests.get(self.baseurl+self.expath+f"?exchangeSegment={esegment}&series={series}&symbol={symbol}",verify=False)
         if self.checkresponse(r):
             self.listexp = [date.split("T")[0] for date in  list(r.json()['result'])]
+            # print("EXPIRY",self.listexp)
             return self.listexp
 
         else:
             print("Data not avialable")
+            # print(r.text,r.status_code)
             return None
 
     def get_option_symbol(self,symbol,expirydate,otype,sprice,series,esegment=2):

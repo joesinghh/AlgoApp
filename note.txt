@@ -1,17 +1,3 @@
-validations
-1. place order > order, trademanagement
-
-
-feature
-
-Config file 
-
-
-Todo
-1. validations
-2. adding API option
-3. Kite place_order
-
 
 ## Tasks to make application work
 
@@ -27,16 +13,18 @@ Todo
 [X]. Get user details from config file.
 [X]. get login url from zerodha.
 
+[x]. Fix BUY/SELL square off.
+[X]. Fix widget bugs.
+[X]. manage 0 for sldelta and tdelta.
+
+[X]. FIX Exit order 
+[X]. FIX Exit all order 
+
 #Pending
 
-[]. FIX Exit order 
-[]. FIX Exit all order
-[]. Fix BUY/SELL square off.
-[]. manage 0 for sldelta and tdelta.
-[]. Fix widget bugs.
+[]. sort date
+[]. Select API for Place Order
+[]. *fix trade management screen.
 []. Store completed order data in completed.xlsx
-[]. *fix trade management screen. 
-[]. test application/debug.
-
-
-
+[]. ERROR handling.
+[]. Documentation.
