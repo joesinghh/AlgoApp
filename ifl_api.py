@@ -191,7 +191,7 @@ class MarketApi(object):
 
         else:
             print("Data not avialable")
-            # print(r.text,r.status_code)
+            print(r.text,r.status_code)
             return None
 
     def get_option_symbol(self,symbol,expirydate,otype,sprice,series,esegment=2):
@@ -207,6 +207,7 @@ class MarketApi(object):
         r = requests.get(self.baseurl+f"/instruments/instrument/optionSymbol?exchangeSegment={esegment}&series={series}&symbol={symbol}&expiryDate={expirydate}&optionType={otype}&strikePrice={sprice}")
         if self.checkresponse(r):
             rdata = r.json()['result'][0]
+            print(rdata)
             lot_size = rdata['LotSize']
             self.instrument_id = rdata['ExchangeInstrumentID']
 

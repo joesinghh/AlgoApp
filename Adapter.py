@@ -89,8 +89,6 @@ class AdapterApi():
             self.enctoken = enctoken
             print("Login Successful, enctoken generated")
 
-
-
 if __name__=="__main__":
     a = AdapterApi(None)
 

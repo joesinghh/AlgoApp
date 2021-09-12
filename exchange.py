@@ -5,8 +5,13 @@ list_of_months = {1: 'Jan', 2: 'Feb', 3: 'Mar',
                 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul',
                 8: 'Aug', 9: 'Sep', 10: 'Oct',
                 11: 'Nov', 12: 'Dec'
-            }
-                            
+            } 
+
+def convert_date(date):
+    date = datetime.strptime(date,"%d-%m-%Y %b").date()
+    date.strftime("%d%b%Y")
+    return date
+                         
 def check_if_last(date):
     exdate = datetime.date(datetime.strptime(date,"%d%b%Y"))
     exmonth = exdate.month
@@ -24,7 +29,7 @@ def exchange_name(instru, expiry, strike_price, call):
     
     if type(strike_price)!=str:
         strike_price = str(strike_price)
-    print("EXPIRY ",expiry)
+    # print("EXPIRY ",expiry)
     date = datetime.date(datetime.strptime(expiry,"%d%b%Y"))
     year = str(date.year)
     month = date.month

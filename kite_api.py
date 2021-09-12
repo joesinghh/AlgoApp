@@ -11,7 +11,7 @@ class Kite():
     instruments = None
     def __init__(self):
         f = open('.\\Config\\kite.json')
-        data = json.load(f)
+        data = json.load(f) 
         self.key = data["kitekey"]
         self.secretkey = data["secretkey"] 
         self.cls = KiteConnect(api_key=self.key)

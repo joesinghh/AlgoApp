@@ -20,11 +20,13 @@
 [X]. FIX Exit order 
 [X]. FIX Exit all order 
 
+[X]. sort date
+[X]. Select API for Place Order
+
 #Pending
 
-[]. sort date
-[]. Select API for Place Order
 []. *fix trade management screen.
+
 []. Store completed order data in completed.xlsx
-[]. ERROR handling.
+
 []. Documentation.

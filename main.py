@@ -1,8 +1,8 @@
+from kite_api import Kite
 import threading
 from tkinter import *
 from threading import Thread
 from tkinter.ttk import Combobox
-
 from numpy.core.fromnumeric import product
 from ifl_api import MarketApi
 from tkinter import messagebox
@@ -14,13 +14,14 @@ import platform
 import time
 import xlrd
 from Adapter import AdapterApi
-from exchange import exchange_name
+from exchange import exchange_name, convert_date
 
-date_today = str(date.today())
+date_today = str(date.today())  #Today's date 
+
 
 BUY = "BUY"
 SELL = "SELL"
-EXIT_ALL = 0
+EXIT_ALL = 0 
 
 dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
 pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
@@ -37,6 +38,7 @@ y_value = 100
 
 mp = MarketApi()
 
+#variables to control threads
 price_thread1 = 0
 price_thread2 = 0
 price_thread3 = 0
@@ -47,7 +49,7 @@ lsize_thread2 = 0
 lsize_thread3 = 0
 lsize_thread4 = 0
 
-PlaceOrderClass = AdapterApi(None)
+PlaceOrderClass = AdapterApi(None) #Adapter Class
 
 class ScrollFrame(Frame):
     def __init__(self, parent):
@@ -109,25 +111,32 @@ class ScrollFrame(Frame):
 
 
 def exit_all_trade():
+    """
+    Exit all Trade at a given moment.
+    All trades will be squared off.
+    """
     global EXIT_ALL
     EXIT_ALL  = 1
 
 def clear_order_variables():
+    """
+    Clear OrderScreen variables and set new values.
+    """
     product_type.set("MIS")
-    bs1.set("")
-    bs2.set("")
-    bs3.set("")
-    bs4.set("")
+    bs1.set(None)
+    bs2.set(None)
+    bs3.set(None)
+    bs4.set(None)
 
     instru1.set("")
     instru2.set("")
     instru3.set("")
     instru4.set("")
 
-    otype1.set("")
-    otype2.set("")
-    otype3.set("")
-    otype4.set("")
+    otype1.set(None)
+    otype2.set(None)
+    otype3.set(None)
+    otype4.set(None)
 
     expiry1.set("")
     expiry2.set("")
@@ -156,6 +165,9 @@ def clear_order_variables():
 
     
 def clear():
+    """
+    Clear PlaceOrder screen variables and assign new values.
+    """
     ls.set(-1)
     cp.set(-1)
     st1.set(0)
@@ -177,7 +189,9 @@ def orderscreen():
     orderframe.tkraise()
 
 def ordermenuscreen():
-    
+    """
+    Start Threads in OrderScreen.
+    """
     global price_thread1, price_thread2, price_thread3, price_thread4, lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4
     lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4 = 1, 1, 1, 1
     price_thread1, price_thread2, price_thread3, price_thread4 = 1, 1, 1, 1
@@ -188,11 +202,16 @@ def ordermenuscreen():
     update_lotlabel()
     orderframe.tkraise()
 
-def tradescreen():
-    top.deiconify()
 
 def getexpiry():
+    """
+    get list of expiry date from IFL api.
 
+    Returns
+    -------
+    list 
+        sorted list of expiry dates in `%d-%m-%Y %b` format.
+    """
     symbol = "NIFTY"
 
     s = "OPTSTK"
@@ -204,17 +223,30 @@ def getexpiry():
 
     for  i in dates:
         d = datetime.strptime(i,"%Y-%m-%d").date()
-        date.append(str(d.strftime("%d%b%Y")))
-    
+        date.append(str(d.strftime("%d-%m-%Y %b")))
+
+    date.sort()
+    date = sorted(date,key=lambda x: x.split("-")[1])    
+    date = sorted(date,key=lambda x: x.split("-")[2].split(" ")[0])    
     return date
 
 
 def inable_all():
+    """
+    Inable all Strike price widgets in PlaceOrder Screen.
+    """
     strike = [s1,s2,s3,s4]
     for i in strike:
         i['state'] = 'normal'
 
 def disable_n(n):
+    """
+    Parameters
+    ----------
+    n : int
+        int specifing how many stike price widgets on PlaceOrder
+        Screen will be disabled.
+    """
     strike = [s4,s3,s2,s1]
 
     for i in range(1,n+1):
@@ -226,6 +258,10 @@ def dummy_radio_fun():
     t.start()
 
 def radio_fun():
+    """
+    Function called by radiobuttons to disable/inable
+    Strike price Widgets on PlaceOrder screen based on a strategy.
+    """
     value = cp.get()
     if value!=-1:
         inable_all()
@@ -235,6 +271,10 @@ def radio_fun():
             disable_n(1)
 
 def setorder():
+    """
+    Function to validate input and open OrderScreen
+    for placing orders.
+    """
     if cp.get()==-1 or  ls==-1:
         messagebox.showerror("ERROR","Select a Valid Strategy")
         return 0
@@ -247,8 +287,8 @@ def setorder():
         return 0
         
     else:
-        clear_order_variables()
-        update_order(cp.get())
+        clear_order_variables() # Clears orderscreen variables.
+        update_order(cp.get()) # Update orderscreen variables.
         orderscreen()
 
 
@@ -257,9 +297,20 @@ def start_setorder():
     t.start()
 
 def update_order(n):
+    """
+    Function to manage Order Blocks on orderscreen and their 
+    threads for updating marketprice and lotsize.
+
+    Parameters
+    ----------
+    n : int
+        int specifying number of order instruments to manage.
+        This number depends on the strategy choosen on placeorder screen. 
+    """
     global price_thread1, price_thread2, price_thread3, price_thread4, lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4
     instru_value  = instu.get()
     expiry_date = expiry.get()
+    api_expiry_date = convert_date(expiry_date)
     lots_num = lots.get()
     s = "OPTSTK"
     if instru_value.find("NIFTY")!=-1:
@@ -286,7 +337,7 @@ def update_order(n):
         otype2.set("CE")
 
 
-        num1, _ = get_instru_id(instru_value,"CE",expiry_date,st1.get(),s)
+        num1, _ = get_instru_id(instru_value,"CE",api_expiry_date,st1.get(),s)
         num2  = num1
 
         lotdata1.set(str(num1))
@@ -331,7 +382,7 @@ def update_order(n):
         otype2.set("CE")
         otype3.set("CE")
 
-        num1, _ = get_instru_id(instru_value,"CE",expiry_date,st1.get(),s)
+        num1, _ = get_instru_id(instru_value,"CE",api_expiry_date,st1.get(),s)
         num2 = num1
         num3 = num1
         
@@ -343,6 +394,7 @@ def update_order(n):
         price2.set(st2.get())
         price3.set(st3.get())
 
+        #Start Threads
         price_thread1 = 1
         price_thread2 = 1
         price_thread3 = 1
@@ -369,8 +421,8 @@ def update_order(n):
         l2.set(lots_num)
         l3.set(lots_num)
         l4.set(lots_num)
-        num1, _ = get_instru_id(instru_value,"PE",expiry_date,st1.get(),s)
-        num2, _ = get_instru_id(instru_value,"CE",expiry_date,st2.get(),s)
+        num1, _ = get_instru_id(instru_value,"PE",api_expiry_date,st1.get(),s)
+        num2, _ = get_instru_id(instru_value,"CE",api_expiry_date,st2.get(),s)
 
 
         if ls.get()==1:
@@ -400,6 +452,7 @@ def update_order(n):
         price3.set(st3.get())
         price4.set(st4.get())
 
+        #Start Threads
         price_thread1 = 1
         price_thread2 = 1
         price_thread3 = 1
@@ -421,6 +474,9 @@ def update_order(n):
 
     
 def owidget_disable(n):
+    """
+    Disable Widgets on OrderScreen.
+    """
     for i in range(n):
         list_sc[i]['state'] = 'disable'
         list_sp[i]['state'] = 'disable'
@@ -435,6 +491,9 @@ def owidget_disable(n):
     
 
 def owidget_active():
+    """
+    Activate Widgets on OrderScreen.
+    """
     for i in range(4):
         list_sc[i]['state'] = 'normal'
         list_sp[i]['state'] = 'normal'
@@ -449,6 +508,9 @@ def owidget_active():
 
 
 def set_top():
+    """
+    Create TradeManagement Screen.
+    """
     global top, scroll_frame, display_frame
 
     top = Toplevel()
@@ -467,49 +529,75 @@ def set_top():
     top.title("AlgoApp | Trade Management")
     top.withdraw()
 
-    top.protocol('WM_DELETE_WINDOW',top.withdraw)
+    top.protocol('WM_DELETE_WINDOW',top.withdraw)  # Replace default close function
     Label(display_frame,text='Initial SOP',font=('Calibri',13)).place(x=30,y=20)
     Label(trade_frame,text='Current SOP',font=('Calibri',13)).place(x=160,y=20)
     Label(trade_frame,text='Target',font=('Calibri',13)).place(x=290,y=20)
     Label(trade_frame,text='SL',font=('Calibri',13)).place(x=390,y=20)
     Label(trade_frame,text='P&L',font=('Calibri',13)).place(x=490,y=20)
 
-def order_api():
-    api_top.deiconify()
+def tradescreen():
+    """
+    Open TradeManagement Screen.
+    """
+    top.deiconify()
+
 
 def create_api_top():
+    """
+    Create API selction window for placing
+    orders. Default api for placing orders 
+    is `Kite Free`.
+    """
     global api_variable, api_top
-    api_top = Toplevel()
+    api_top = Toplevel(bg='white')
     api_top.geometry('200x200')
     api_top.resizable(0,0)
     api_variable = IntVar()
     api_variable.set(3)
     
-    ifl = Radiobutton(api_top,text="IFL",variable=api_variable,value=1)
-    ifl.pack()
+    Label(api_top,text=" Select You API for placing orders. ",font=("Arial",9,"bold"),bg='white').pack(pady=12)
+    ifl = Radiobutton(api_top,text="IFL",variable=api_variable,value=1,bg='white')
+    ifl.pack(pady=10)
 
-    kite_api = Radiobutton(api_top,text='Kite',variable=api_variable,value=2)
-    kite_api.pack()
+    kite_api = Radiobutton(api_top,text='Kite',variable=api_variable,value=2,bg='white')
+    kite_api.pack(pady=10)
 
-    kite_free = Radiobutton(api_top,text='Kite Free',variable=api_variable,value=3)
-    kite_free.pack()
+    kite_free = Radiobutton(api_top,text='Kite Free',variable=api_variable,value=3,bg='white')
+    kite_free.pack(pady=10)
 
     api_top.withdraw()
     api_top.protocol('WM_DELETE_WINDOW',api_top.withdraw)
 
+def order_api():
+    """
+    Open API Selection window.
+    """
+    api_top.deiconify()
 
-def exit_order():
-    print("Order exited")
+def set_Adapter():
+    """
+    Change Adapter based on the API selection 
+    for placing orders on API selection screen.
+    """
+    global PlaceOrderClass
+    if api_variable.get()==1:
+        PlaceOrderClass = AdapterApi(MarketApi)
+    elif api_variable.get()==2:
+        PlaceOrderClass = AdapterApi(Kite)
+    elif api_variable.get()==3:
+        PlaceOrderClass = AdapterApi(None)
 
+    
 def dummy_place_order():
     t = Thread(target=place_realorder)
     t.start()
-
-def get_price(name,bs):
-    m = MarketApi()
-    price = m.get_quote(name,esegment=2,xts=1504)
     
 def update_price_label():
+    """
+    Function to start Threads for updating market price
+    of instruments in OrderScreen.
+    """
     price_thread_list = [price_thread1, price_thread2,price_thread3, price_thread4]
     if price_thread_list.count(1)==2:
         t1 = Thread(target=price_update_thread1,args=())
@@ -536,7 +624,10 @@ def update_price_label():
         t4.start()
 
 def price_update_thread1():
-    
+    """
+    Function to Update market Price of 1st
+    instrument in OrderScreen.
+    """
     if instru1.get() and otype1.get():
          
         o = 'CE'
@@ -557,8 +648,7 @@ def price_update_thread1():
                 premium1.set(str(m_bid[0]))
 
         except Exception as e:
-            print(e,"For price1")
-            pass
+            print("price update 1 ",e)
 
     if price_thread1:
         time.sleep(5)
@@ -567,6 +657,10 @@ def price_update_thread1():
         return
 
 def price_update_thread2():
+    """
+    Function to Update market Price of 2nd
+    instrument in OrderScreen.
+    """
     
     if instru2.get and otype2.get():
 
@@ -590,8 +684,7 @@ def price_update_thread2():
                 premium2.set(str(m_bid[0]))
 
         except Exception as e:
-            print(e,"For price2")
-            pass
+            print("price update 2 ",e)
     if price_thread2:
         time.sleep(5)
         price_update_thread2()
@@ -599,7 +692,10 @@ def price_update_thread2():
         return
 
 def price_update_thread3():
-    
+    """
+    Function to Update market Price of 3rd
+    instrument in OrderScreen.
+    """
     if instru3.get() and otype3.get():
 
         o = 'CE'
@@ -620,8 +716,8 @@ def price_update_thread3():
                 premium3.set(str(m_bid[0]))
 
         except Exception as e:
-            print(e,"For price3")
-            pass
+            print("price update 4 ",e)
+
     if price_thread3:
         time.sleep(5)
         price_update_thread3()
@@ -629,6 +725,10 @@ def price_update_thread3():
         return
 
 def price_update_thread4():
+    """
+    Function to Update market Price of 4th
+    instrument in OrderScreen.
+    """
     if instru4.get():
 
         o = 'CE'
@@ -651,7 +751,7 @@ def price_update_thread4():
                 premium4.set(str(m_bid[0]))
 
         except Exception as e:
-            print(e,"For price4")
+            print("price update 4 ",e)
 
     if  price_thread4:
         time.sleep(5)
@@ -660,6 +760,10 @@ def price_update_thread4():
         return
     
 def update_lotlabel():
+    """
+    Function to start Threads for updating lot size
+    of instruments in OrderScreen.
+    """
     lot_label_list = [lsize_thread1, lsize_thread2, lsize_thread3,lsize_thread4]
 
     if lot_label_list.count(1)==2:
@@ -688,7 +792,10 @@ def update_lotlabel():
 
 
 def set_lot_label1():
-
+    """
+    Function to Update lot size of 1st
+    instrument in OrderScreen.
+    """
     if instru1.get() and exp1['value']:
         o = 'CE'
         if otype1.get()=="PE":
@@ -703,7 +810,7 @@ def set_lot_label1():
             lotsize, id_ = get_instru_id(instru,o,expiry1.get(),price1.get(),series)
             lotdata1.set(str(lotsize))
         except Exception as e:
-            print(e)
+            print("Lot size 1 ",e)
     if lsize_thread1:
         time.sleep(5)
         set_lot_label1()
@@ -711,7 +818,10 @@ def set_lot_label1():
         return
 
 def set_lot_label2():
-
+    """
+    Function to Update lot size of 2nd
+    instrument in OrderScreen.
+    """
     if instru2.get() and exp2['value']:
         o = 'CE'
         if otype2.get()=="PE":
@@ -725,7 +835,7 @@ def set_lot_label2():
             lotsize, id_ = get_instru_id(instru,o,expiry2.get(),price2.get(),series)
             lotdata2.set(str(lotsize))
         except Exception as e:
-            print(e)
+            print("lot size 2 ",e)
     if lsize_thread2:
         time.sleep(5)
         set_lot_label2()
@@ -733,7 +843,10 @@ def set_lot_label2():
         return
 
 def set_lot_label3():
-
+    """
+    Function to Update lot size of 3rd
+    instrument in OrderScreen.
+    """
     if instru3.get() and exp3['value']:
         o = 'CE'
         if otype3.get()=="PE":
@@ -748,7 +861,7 @@ def set_lot_label3():
             lotsize, id_ = get_instru_id(instru,o,expiry3.get(),price3.get(),series)
             lotdata3.set(str(lotsize))
         except Exception as e:
-            print(e)
+            print("lot size 3 ",e)
     if lsize_thread3:
         time.sleep(5)
         set_lot_label3()
@@ -756,7 +869,10 @@ def set_lot_label3():
         return
 
 def set_lot_label4():
-
+    """
+    Function to Update lot size of 4th 
+    instrument in OrderScreen.
+    """
     if instru4.get() and exp4['value']:
         o = 'CE'
         if otype4.get()=="PE":
@@ -771,7 +887,7 @@ def set_lot_label4():
             lotsize, id_ = get_instru_id(instru,o,expiry4.get(),price4.get(),series)
             lotdata4.set(str(lotsize))
         except Exception as e:
-            print(e)
+            print("lot size 4 ",e)
     if lsize_thread4:
         time.sleep(5)
         set_lot_label4()
@@ -779,7 +895,12 @@ def set_lot_label4():
         return
          
 def place_realorder():
-
+    """
+    Function to Place orders based on the values specified on
+    orderscreen. Order is managed by creating `ManageOrder` object
+    which updates profit, current sop and other values. It also inserts
+    the order in `OrderData//orders_data.xlsx` after it is placed.
+    """
     global last_num,trade_threads,y_value, price_thread1, price_thread2,\
     price_thread3, price_thread4, EXIT_ALL
     
@@ -809,7 +930,8 @@ def place_realorder():
     instru = [i1,i2,i3,i4]
     bs, pc, expiry_dates, instru, quant, strike_price = zip(*sorted(zip(bs, pc, expiry_dates, instru, quant,strike_price),key=lambda x: x[0]))
 
-    isop = 0
+    isop = 0 #initial sop before placing order.
+    # data variable store values related to the order.
     data = [last_num+1,date_today,*instru,*bs,*pc,sdelta.get(),tdelta.get(),*strike_price,*expiry_dates,*quant,count]
     
     data.append(product_value)
@@ -821,6 +943,7 @@ def place_realorder():
         for j in range(4-count,4):
             
             name = instru[j]
+            exp_date = convert_date(expiry_dates[j])
             series = "OPTSTK"
             if "NIFTY" in name:
                 series = "OPTIDX"
@@ -829,12 +952,12 @@ def place_realorder():
                 o = "PE"
                         
             try:
-                _, id_ = get_instru_id(name,o,expiry_dates[j],strike_price[j],series)
+                _, id_ = get_instru_id(name,o,exp_date,strike_price[j],series)
                 instru_lot_size = _
                 m.get_quote(id_,2,1502)
 
             except Exception as e:
-                messagebox.showerror("Error",e)
+                messagebox.showerror("Error while obtaining intrument id. Couldn't place order.",e)
                 return
 
             if bs[j]==BUY:
@@ -848,20 +971,20 @@ def place_realorder():
             
             try:
                 Place = PlaceOrderClass
-                tsymbol = exchange_name(name, expiry_dates[j],strike_price[j],o)
+                tsymbol = exchange_name(name, exp_date,strike_price[j],o) # Trading symbol
 
                 def make_first_order(id_,slide,q,tradingsymbol,instru_lot_size,product_type):
                     Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,size=instru_lot_size,product_type=product_type)
 
-                # place_thread = Thread(target=make_first_order,args=(id_,slide,quant[j],tsymbol,instru_lot_size))
-                # place_thread.start()
                 make_first_order(id_,slide,quant[j],tsymbol,instru_lot_size,product_type=product_value)
                 messagebox.showinfo("ORDER STATUS","Your order is placed!")
+
             except Exception as e:
-                print(e)
+                print("Order not placed",e)
                 messagebox.showerror("ERROR",e)
                 return
-
+            
+            # stop updating market price.
             price_thread1 = 0
             price_thread2 = 0
             price_thread3 = 0
@@ -874,14 +997,16 @@ def place_realorder():
         order.create_widgets()
         order.current_sop()
         order.update_widgets()
-        # y_value+=80
+        # Redirect to Preorder Screen to place more orders.
         preorderscreen()
         # t = Thread(target=insert_data,args=(data,columns,'.//OrderData//orders_data.xlsx'))
         # t.start()
         # insert_data(data,columns)
 
 def start_last_orders():
-    
+    """
+    Start managing Pending/notcompleted orders.
+    """
     dataframe = fetch_data('.\\OrderData\\notcompleted.xlsx')
     for data in dataframe:
         order = ManageOrder(data)
@@ -891,23 +1016,42 @@ def start_last_orders():
     
 
 def get_instru_id(symbol_,option,expiry,price_,series_):
+    """
+    Returns instrument id and lot size of a trading symbol.
+
+    Parameters
+    ----------
+    symbol_ : str
+        trading symbol name
+    option : str
+        trading option (PE/CE)
+    expirty : str
+        expirty date
+    price_ : str
+        strike price
+    series_ : str
+        series to which symbol belongs (OPTIDX/OPTSTK)
+
+    Returns
+    -------
+    lot : int
+        lot size of symbol_
+    id_ : int
+        instrument id of symbol_
+    """
     m = MarketApi()
     lot , id_ = m.get_option_symbol(symbol=symbol_,otype=option,expirydate=expiry,sprice=price_,series=series_)
     return lot,id_
 
-def start_tmanage(data,):
-    global trade_threads
-    data_array = dataframe.values
-
-    for i in data_array:
-        m1 = ManageOrder(i,)
-        m1.create_widgets()
-        m1.update_widgets()
-
 
 class ManageOrder:
+    """
+    Class to managge order.
 
+    Methods
+    -------
 
+    """
     def __init__(self,data) :
         
         self.data = data
@@ -917,7 +1061,6 @@ class ManageOrder:
         self.frame = Frame(display_frame,bg='blue')
         self.frame.pack(fill='x',expand=1,ipady=50)
         self.quantity = data[24:28]
-        print(self.quantity)
         self.date = self.data[1]
         self.instrument = data[2:6]
         self.bs = data[6:10]
@@ -938,15 +1081,13 @@ class ManageOrder:
         # self.current_sop()
         self.sdelta_variable = StringVar()
         self.tdelta_variable = StringVar()
-        print("DATA ",self.data)
-
 
 
     def current_sop(self):
         sop = 0
         for i in range(4-self.count,4):
             if self.instrument[i]!=None and self.instrument!='':
-                print("instrument",self.instrument[i])
+
                 name = self.instrument[i]
                 series = "OPTSTK"
                 if name.find("NIFTY")!=-1:
@@ -970,11 +1111,9 @@ class ManageOrder:
                     price = m.asks[0]  
                     sop+=price
                 
-                print(price,self.instrument[i])
             else:
                 break
         
-        # print("Current SOP",sop)
         self.csop = sop
         self.currsop['text'] = f"{self.csop:.2f}"
         self.profit_loss()
@@ -988,7 +1127,6 @@ class ManageOrder:
         if mssg:
             self.square_off()
             self.destroy()
-
 
     def destroy(self):
 
@@ -1191,7 +1329,7 @@ submenu2.add_command(label="Kite API")
 
 menu.add_cascade(menu=submenu1,label="Options")
 menu.add_cascade(menu=submenu2,label="Login")
-menu.add_command(label="Api",command=order_api)
+menu.add_command(label=" API ",command=order_api)
 
 
 root.config(menu=menu)
@@ -1432,21 +1570,10 @@ exp3.place(x=360,y=290)
 exp4.place(x=360,y=390)
 
 exp1['values']=date_list
-# exp1.set(date_list)
-# exp1.set_completion_list(date_list)
-
 exp2['values']=date_list
-# exp2.set(date_list)
-# exp2.set_completion_list(date_list)
-
 exp3['values']=date_list
-# exp3.set(date_list)
-# exp3.set_completion_list(date_list)
-
 exp4['values']=date_list
-# exp4.set(date_list)
-# exp4.set_completion_list(date_list)
-#
+
 list_exp = [exp4,exp3,exp2,exp1]
 Label(orderframe,text='Strike Price',bg='white').place(x=560,y=30)
 sprice1 = Entry(orderframe, textvariable=price1)
@@ -1519,6 +1646,6 @@ normal = Radiobutton(orderframe,text="NRML",bg='white',value="NRML",variable=pro
 normal.place(x=780,y=520)
 ## Trade Management
 
-set_top()
-create_api_top()
+set_top() #create trademanagement screen
+create_api_top() # create API selection screen.
 root.mainloop()

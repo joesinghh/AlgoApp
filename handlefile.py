@@ -3,8 +3,6 @@ import numpy as np
 from openpyxl import load_workbook
 from threading import Thread
 
-
-
 def insert_data_main(data,cols,filename=".\\OrderData\\order_data.xlsx"):
     # dataframe = pd.read_excel(filename)
     # print(data)
