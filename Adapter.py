@@ -18,9 +18,10 @@ class AdapterApi():
 
     def place_order(self,**kwargs):
         self.__dict__.update(kwargs)
-        print(kwargs)
+
 
         if self.value==1:
+            
             self.cls.place_order(self.id_,self.slide,self.q)
 
         elif self.value==None:
@@ -30,17 +31,15 @@ class AdapterApi():
                 'Content-Type':'application/x-www-form-urlencoded',
                 'Authorization':f'enctoken {self.enctoken}'
             }
-            # print(self.tradingsymbol)
+
         
             r = requests.post('https://kite.zerodha.com/oms/orders/regular',data=data,headers=header,verify=False)
-            print(r.status_code)
+
             # print(r.json())
             if r.status_code>300:
                 print(r.json())
                 raise Exception(r.json()['message'])
                 
-            else:
-                print(r.json()) 
 
         elif self.value==2:
             self.cls.place_order(exchange=self.exchange,symbol=self.symbol,t_type=self.ttype,quantity=self.q)
@@ -83,7 +82,7 @@ class AdapterApi():
         
         # print(login2.json())
         enctoken = session.cookies['enctoken']
-        print(enctoken)
+
         with open(".\\Tokens\\enctoken.txt","w")as file:
             file.write(enctoken)
             self.enctoken = enctoken

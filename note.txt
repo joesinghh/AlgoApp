@@ -23,10 +23,9 @@
 [X]. sort date
 [X]. Select API for Place Order
 
+[X]. *fix trade management screen.
+[X]. Documentation.
+
 #Pending
 
-[]. *fix trade management screen.
-
 []. Store completed order data in completed.xlsx
-
-[]. Documentation.

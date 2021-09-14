@@ -203,17 +203,19 @@ class MarketApi(object):
             "optionType":otype,
             "strikePrice":sprice
         }
-
+        
+        # print(f"{esegment} &series={series} &symbol={symbol} &expiryDate={expirydate} &optionType={otype} &strikePrice={sprice}")
         r = requests.get(self.baseurl+f"/instruments/instrument/optionSymbol?exchangeSegment={esegment}&series={series}&symbol={symbol}&expiryDate={expirydate}&optionType={otype}&strikePrice={sprice}")
         if self.checkresponse(r):
             rdata = r.json()['result'][0]
-            print(rdata)
+
             lot_size = rdata['LotSize']
             self.instrument_id = rdata['ExchangeInstrumentID']
 
             return lot_size, self.instrument_id
 
         else:
+            
             return None, None
     def place_order(self,eid=3045, oslide="SELL" , quantity=1, ouid='',*args):
         json = {
@@ -232,7 +234,13 @@ class MarketApi(object):
             "orderUniqueIdentifier": "123abc"
         }
         r = requests.post(self.baseurl_place+self.placeurl,json=json,headers=self.headers)
+        data  = r.json()
+
         if (self.checkresponse(r)):
-            data  = r.json()
             self.orderid = data['result']['AppOrderID']
             # print("Status : %s"%data['type'])
+        elif r.status_code<500:
+            raise Exception(data['data']['description'])
+        else:
+            raise Exception("Server Error!")
+

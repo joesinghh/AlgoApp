@@ -8,8 +8,18 @@ list_of_months = {1: 'Jan', 2: 'Feb', 3: 'Mar',
             } 
 
 def convert_date(date):
+    """
+    Change format of a date from `%d-%m-%Y %b`
+    to `%d%b%Y`.
+    example : 19-09-2021 Sep -> 19Sep2021
+
+    Returns
+    -------
+    datetime.date
+        Date object with changed format.
+    """
     date = datetime.strptime(date,"%d-%m-%Y %b").date()
-    date.strftime("%d%b%Y")
+    date = date.strftime("%d%b%Y")
     return date
                          
 def check_if_last(date):
