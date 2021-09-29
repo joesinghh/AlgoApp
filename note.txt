@@ -26,6 +26,18 @@
 [X]. *fix trade management screen.
 [X]. Documentation.
 
-#Pending
+[X]. default lot size
+[X]. Change CE/PE
+[X]. Fix calculation.
 
+#Pending
+[]. add isop widget : create a thread lock in price_update Thread
 []. Store completed order data in completed.xlsx
+
+
+{
+    "userid":"SE3889",
+    "password":"Sep@2021",
+    "twofa":"147258"
+}
+

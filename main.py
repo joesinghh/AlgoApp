@@ -1,7 +1,7 @@
 from kite_api import Kite
 import threading
 from tkinter import *
-from threading import Thread
+from threading import Thread, Lock
 from tkinter.ttk import Combobox
 from numpy.core.fromnumeric import product
 from ifl_api import MarketApi
@@ -23,21 +23,22 @@ BUY = "BUY"
 SELL = "SELL"
 EXIT_ALL = 0 
 
-dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
-pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
+# dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
+# pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
 
-try :
-    last_num = dataframe['SN'].iloc[-1]
-except IndexError:
-    last_num = 1
-columns = dataframe.columns
+# try :
+#     last_num = dataframe['SN'].iloc[-1]
+# except IndexError:
+#     last_num = 1
+# columns = dataframe.columns
 # print(columns)
+last_num = 1
 
 trade_threads  = 0
 y_value = 100
 
 mp = MarketApi()
-
+lock = Lock()
 #variables to control threads
 price_thread1 = 0
 price_thread2 = 0
@@ -122,7 +123,7 @@ def clear_order_variables():
     """
     Clear OrderScreen variables and set new values.
     """
-    product_type.set("MIS")
+    product_type.set("NRML")
     bs1.set(None)
     bs2.set(None)
     bs3.set(None)
@@ -177,7 +178,7 @@ def clear():
     # instrument.set("")
     instu.set("")
     
-    lots.set(0)
+    lots.set(1)
     expiry.set("")
     Bid_label['text'] = "None"
     Ask_label['text'] = "None"
@@ -335,8 +336,14 @@ def update_order(n):
             bs1.set(SELL)
             bs2.set(BUY)
 
-        otype1.set("CE")
-        otype2.set("CE")
+        
+        if n==2:
+            otype1.set("PE")
+            otype2.set("PE")
+        else:
+            otype1.set("CE")
+            otype2.set("CE")
+        
 
 
         num1, _ = get_instru_id(instru_value,"CE",api_expiry_date,st1.get(),s)
@@ -443,6 +450,7 @@ def update_order(n):
         otype2.set("CE")
         otype3.set("PE")
         otype4.set("PE")
+
         lotdata1.set(str(num1))
         lotdata2.set(str(num1))
         lotdata3.set(str(num2))
@@ -623,6 +631,9 @@ def update_price_label():
         t3.start()
         t4 = Thread(target=price_update_thread4,args=())
         t4.start()
+def isop_update():
+    price = 0
+    
 
 def price_update_thread1():
     """
@@ -643,7 +654,7 @@ def price_update_thread1():
             _, id_ = get_instru_id(instru,o,convert_date(expiry1.get()),price1.get(),series)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
-            if bs1.get()==1:
+            if bs1.get()==BUY:
                 premium1.set(str(m_ask[0]))
             else:
                 premium1.set(str(m_bid[0]))
@@ -663,7 +674,7 @@ def price_update_thread2():
     instrument in OrderScreen.
     """
     
-    if instru2.get and otype2.get():
+    if instru2.get() and otype2.get():
 
 
         o = 'CE'
@@ -679,12 +690,13 @@ def price_update_thread2():
             _, id_ = get_instru_id(instru,o,convert_date(expiry2.get()),price2.get(),series)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
-            if bs2.get()==1:
+            if bs2.get()==BUY:
                 premium2.set(str(m_ask[0]))
             else:
                 premium2.set(str(m_bid[0]))
 
         except Exception as e:
+
             print("price update 2 ",e)
     if price_thread2:
         time.sleep(5)
@@ -711,13 +723,13 @@ def price_update_thread3():
             _, id_ = get_instru_id(instru,o,convert_date(expiry3.get()),price3.get(),series)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
-            if bs3.get()==1:
+            if bs3.get()==BUY:
                 premium3.set(str(m_ask[0]))
             else:
                 premium3.set(str(m_bid[0]))
 
         except Exception as e:
-            print("price update 4 ",e)
+            print("price update 3 ",e)
 
     if price_thread3:
         time.sleep(5)
@@ -746,7 +758,7 @@ def price_update_thread4():
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
 
-            if bs4.get()==1:
+            if bs4.get()==BUY:
                 premium4.set(str(m_ask[0]))
             else:
                 premium4.set(str(m_bid[0]))
@@ -965,12 +977,12 @@ def place_realorder():
                 return
 
             if bs[j]==BUY:
-                price = m.bids[0]
-                isop-=price
-                slide = BUY
-            else:
                 price = m.asks[0]
                 isop+=price
+                slide = BUY
+            else:
+                price = m.bids[0]
+                isop-=price
                 slide = SELL
             
             try:
@@ -1008,9 +1020,9 @@ def place_realorder():
         order.update_widgets()
         # Redirect to Preorder Screen to place more orders.
         preorderscreen()
-        t = Thread(target=insert_data,args=(data,columns,'.//OrderData//order_data.xlsx'))
-        t.start()
-        insert_data(data,columns,'.//OrderData//order_data.xlsx')
+        # t = Thread(target=insert_data,args=(data,columns,'.//OrderData//order_data.xlsx'))
+        # t.start()
+        # insert_data(data,columns,'.//OrderData//order_data.xlsx')
 
 def start_last_orders():
     """
@@ -1098,8 +1110,8 @@ class ManageOrder:
         self.sld = data[14]
         self.targetd  = data[15]
         self.strike_price = data[16:20]
-        self.sl = self.initsop+self.sld #variable to store stop loss value
-        self.target = self.initsop - self.targetd #variable to store traget
+        self.sl = (self.initsop-self.sld) #variable to store stop loss value
+        self.target = (self.initsop + self.targetd) #variable to store traget
         self.pl = 0 # profit and loss value
         self.expiry_data = data[20:24]
         self.csop = self.initsop #current sop
@@ -1126,7 +1138,7 @@ class ManageOrder:
                 o = "PE"
                 if self.pc[i]=="CE":
                     o = "CE"
-                        
+
                 tsymbol = exchange_name(name, convert_date(self.expiry_data[i]),self.strike_price[i],o)
                 Label(self.frame,text=tsymbol,bg='#c7c8c9').place(y=70,relx=x_place_value)
                 x_place_value+=0.22
@@ -1140,31 +1152,34 @@ class ManageOrder:
         sop = 0
         for i in range(len(self.instrument)):
             if self.instrument[i]!=None and self.instrument!='' and self.expiry_data[i]!='':
-
+                
+                
                 name = self.instrument[i]
+                
                 series = "OPTSTK"
                 if name.find("NIFTY")!=-1:
                     series = "OPTIDX"
 
-                o = "PE"
+                if self.pc[i]=="PE":
+                    o = "PE"
 
-                if self.pc[i]:
+                elif self.pc[i]:
                     o = "CE"
 
                 _, id_ = get_instru_id(name,o,convert_date(self.expiry_data[i]),self.strike_price[i],series)
-
+             
                 m = MarketApi()
                 m.get_quote(id_,2,1502)
             
                 if self.bs[i]==SELL: # check BUY/SELL value
-                    price = m.bids[0]
+                    price = m.asks[0]
                     sop-=price
                 else:
-                    price = m.asks[0]  
+                    price = m.bids[0]  
                     sop+=price
-                
+                print(name,'+',self.bs[i],"+ Current sop : ",sop,"Price : ",price)
             else:
-                break
+                continue
         
         self.csop = sop 
         self.currsop['text'] = f"{self.csop:.2f}" #update current sop
@@ -1175,7 +1190,7 @@ class ManageOrder:
         Updates profit value for an order based on current sop
         and inital sop.
         """
-        self.pl = self.csop - self.initsop
+        self.pl = (self.csop - self.initsop)
         self.p_and_l['text'] = f"{self.pl:.2f}"
 
     def exit_trade(self):
@@ -1214,14 +1229,14 @@ class ManageOrder:
         self.currsop.place(x=150,y=self.y,width=80)
         
         self.sdelta = Entry(self.frame,textvariable= self.sdelta_variable)
-        self.sdelta.place(x=280,y=self.y,width=82)
+        self.sdelta.place(x=390,y=self.y,width=82)
         self.sdelta_variable.set(f"{self.sl:.2f}")
 
         self.p_and_l  = Label(self.frame,text=f"{self.pl:.2f}")
         self.p_and_l.place(x=510,y=self.y,width=82)
 
         self.tdelta = Entry(self.frame,textvariable=self.tdelta_variable)
-        self.tdelta.place(x=390,y=self.y,width=80)
+        self.tdelta.place(x=280,y=self.y,width=80)
         self.tdelta_variable.set(f"{self.target:.2f}")
 
         self.exit_trade  = Button(self.frame,text='Exit',command=self.exit_trade)
@@ -1243,21 +1258,23 @@ class ManageOrder:
             t = Thread(target=self.current_sop)
             t.start()
             time = datetime.now().time().strftime("%H:%M")
-            if time=="15:00":
-                self.pending_order()
-                self.destroy()
-                return
+            # if time.hour>=15 and time.minute>=0:
+            #     self.pending_order()
+            #     self.destroy()
+            #     return
 
-            if ((self.pl>=eval(self.tdelta_variable.get())) or (self.pl < eval(self.sdelta_variable.get()))) and (self.sld!=0 and self.targetd!=0):
+            if ((self.csop)>=(self.tdelta_variable.get())) or ((self.csop) < (self.sdelta_variable.get())) and (self.sld!=0 and self.targetd!=0):
 
                 self.square_off()
                 self.destroy()
                 # delete_data_object(self.sn,self.date)
                 return 
+                pass
 
             elif EXIT_ALL:
                 self.square_off()
                 self.destroy()
+                pass
     
             root.after(60000,self.update_widgets,self)
         else:
@@ -1283,10 +1300,10 @@ class ManageOrder:
                 if self.bs[i]=="BUY":
                     slide = "SELL"
                         
-                _, id_ = get_instru_id(name,o,self.expiry_data[i],self.strike_price[i],series)
+                _, id_ = get_instru_id(name,o,convert_date((self.expiry_data[i])),self.strike_price[i],series)
                 lot = _
                 #Trading symbol (zerodha)
-                tsymbol = exchange_name(name, self.expiry_data[i],self.strike_price[i],o)
+                tsymbol = exchange_name(name, convert_date(self.expiry_data[i]),self.strike_price[i],o)
                 #Place order
                 self.place_order(id_,slide,self.quantity[i],tsymbol,lot)
 
@@ -1297,8 +1314,8 @@ class ManageOrder:
         notcompleted.xlsx. 
         """
         new_data = [self.num,self.data[1],*self.instrument,*self.bs,*self.pc,self.sl,self.targetd,*self.strike_price,*self.expiry_data,*self.quantity,self.data[-2],self.csop]
-        t = Thread(target=insert_data,args=(new_data,columns,'.\\OrderData\\notcompleted.xlsx'))
-        t.start()
+        # t = Thread(target=insert_data,args=(new_data,columns,'.\\OrderData\\notcompleted.xlsx'))
+        # t.start()
 
     def place_order(self,id_,slide,q,tsymbol,size):
         """
@@ -1322,18 +1339,19 @@ class ManageOrder:
         Deleted order from notcompleted.xlsx if it is 
         completed.
         """
-        data = pending_df[(pending_df[columns[0]==sn]) & (pending_df[columns[1]==date])]
-        if data:
-            row_count = 1
-            all_data = fetch_data('.\\OrderData\\notcompleted.xlsx')
-            for d in all_data:
+        # data = pending_df[(pending_df[columns[0]==sn]) & (pending_df[columns[1]==date])]
+        # if data:
+        #     row_count = 1
+        #     all_data = fetch_data('.\\OrderData\\notcompleted.xlsx')
+        #     for d in all_data:
 
-                if d[0]==sn and d[1]==date:
-                    break
-                row_count+=1
+        #         if d[0]==sn and d[1]==date:
+        #             break
+        #         row_count+=1
             
-            delete_thread = Thread(target=delete_data,args=(row_count,))
-            delete_thread.start()
+        #     delete_thread = Thread(target=delete_data,args=(row_count,))
+        #     delete_thread.start()
+
 
 def dummy_buy_ask():
     t = Thread(target=buy_ask_get)
@@ -1344,19 +1362,21 @@ def buy_ask_get():
     Gets the buy/ask value for a instrument on PreOrder Screen.
     StikePrice is the 1st strike price given on Preorder Screen.
     """
-    if not (cp.get() and instrument.get() and expiry.get() and st1.get()):
-        messagebox.showerror("Error","Missing Some values")
-        return 0
+    try:
+        if not (cp.get() and instrument.get() and expiry.get() and st1.get()):
+            messagebox.showerror("Error","Missing Some values")
+            return 0
 
-    if cp.get():
-        o = 'CE'
-    else:
-        o = 'PE'
+        if cp.get()=="CE":
+            o = 'CE'
+        elif cp.get()=="PE":
+            o = 'PE'
 
-    series='OPTSTK'
-    if 'NIFTY' in instrument.get():
-        series='OPTIDX'
-    
+        series='OPTSTK'
+        if 'NIFTY' in instrument.get():
+            series='OPTIDX'
+    except Exception as e:
+        print(e,"BUY ASK")
     try :
 
         _, id_ = get_instru_id(instrument.get(),o,convert_date(expiry.get()),st1.get(),series)
@@ -1441,6 +1461,7 @@ st2 = IntVar()
 st3 = IntVar()
 st4 = IntVar()
 lots = IntVar()
+lots.set(1)
 instu = StringVar()
 expiry = StringVar()
 
@@ -1491,7 +1512,7 @@ sdelta = IntVar()
 tdelta = IntVar()
 
 product_type = StringVar()
-product_type.set("MIS")
+product_type.set("NRML")
 
 date_list = getexpiry()
 
@@ -1580,6 +1601,7 @@ clear_button.place(x=500,y=540)
 
 buy_ask = Button(preorderframe,text='Get Price',command=dummy_buy_ask)
 buy_ask.place(x=600,y=540)
+
 
 ### OrderFrame
 Label(orderframe,text='Order Type',bg='white').place(x=30,y=30)
@@ -1742,6 +1764,12 @@ mis = Radiobutton(orderframe,text="MIS",bg='white',value="MIS",variable=product_
 mis.place(x=780,y=490)
 normal = Radiobutton(orderframe,text="NRML",bg='white',value="NRML",variable=product_type)
 normal.place(x=780,y=520)
+
+isop_label = Label(orderframe,text='ISOP : ',bg='white')
+isop_label.place(x=370,y=550)
+
+isop_value = Label(orderframe, text="",bg='white')
+isop_value.place(x=470,y=550,width=70)
 ## Trade Management
 
 set_top() #create trademanagement screen

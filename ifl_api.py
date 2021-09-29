@@ -147,8 +147,8 @@ class MarketApi(object):
             # print(self.quote)
             self.bids = [self.quote['Bids'][0]['Price'],self.quote['Bids'][1]['Price'],self.quote['Bids'][2]['Price']]
             self.asks = [self.quote['Asks'][0]['Price'],self.quote['Asks'][1]['Price'],self.quote['Asks'][2]['Price']]
-            # print("BUY",self.bids[0])
-            # print("SELL",self.asks[0])
+            print(f"{instrument_id} BUY",self.bids[0])
+            print(f"{instrument_id} SELL",self.asks[0])
             return self.bids, self.asks
 
         else:
@@ -215,7 +215,7 @@ class MarketApi(object):
             return lot_size, self.instrument_id
 
         else:
-            
+            print(r.json())
             return None, None
     def place_order(self,eid=3045, oslide="SELL" , quantity=1, ouid='',*args):
         json = {
