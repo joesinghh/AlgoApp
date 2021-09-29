@@ -1262,19 +1262,24 @@ class ManageOrder:
             #     self.pending_order()
             #     self.destroy()
             #     return
+            try:
 
-            if ((self.csop)>=(self.tdelta_variable.get())) or ((self.csop) < (self.sdelta_variable.get())) and (self.sld!=0 and self.targetd!=0):
+                if ((self.csop)>=float(self.tdelta_variable.get())) or ((self.csop) < float(self.sdelta_variable.get())) and (self.sld!=0 and self.targetd!=0):
 
-                self.square_off()
-                self.destroy()
-                # delete_data_object(self.sn,self.date)
-                return 
+                    self.square_off()
+                    self.destroy()
+                    # delete_data_object(self.sn,self.date)
+                    return 
+                    pass
+
+
+                elif EXIT_ALL:
+                    self.square_off()
+                    self.destroy()
+                    pass
+            except:
                 pass
 
-            elif EXIT_ALL:
-                self.square_off()
-                self.destroy()
-                pass
     
             root.after(60000,self.update_widgets,self)
         else:
@@ -1367,10 +1372,10 @@ def buy_ask_get():
             messagebox.showerror("Error","Missing Some values")
             return 0
 
-        if cp.get()=="CE":
-            o = 'CE'
-        elif cp.get()=="PE":
+        if cp.get()==2:
             o = 'PE'
+        else:
+            o = 'CE'
 
         series='OPTSTK'
         if 'NIFTY' in instrument.get():
