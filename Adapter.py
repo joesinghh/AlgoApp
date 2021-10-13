@@ -19,7 +19,6 @@ class AdapterApi():
     def place_order(self,**kwargs):
         self.__dict__.update(kwargs)
 
-
         if self.value==1:
             
             self.cls.place_order(self.id_,self.slide,self.q)
@@ -31,7 +30,8 @@ class AdapterApi():
                 'Content-Type':'application/x-www-form-urlencoded',
                 'Authorization':f'enctoken {self.enctoken}'
             }
-
+ 
+            print(data)
         
             r = requests.post('https://kite.zerodha.com/oms/orders/regular',data=data,headers=header,verify=False)
 

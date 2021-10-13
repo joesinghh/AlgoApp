@@ -48,7 +48,7 @@ def exchange_name(instru, expiry, strike_price, call):
     month_ = list_of_months[month][0].upper() if month>9 else str(month)
     
     # print(date, year, month,)
-    if check_if_last(expiry) and month<10:
+    if check_if_last(expiry) :
         ex = instru+year[-2:]+list_of_months[date.month].upper()+strike_price+call
     else:
         ex = instru+year[-2:]+month_+day_+strike_price+call
@@ -57,5 +57,5 @@ def exchange_name(instru, expiry, strike_price, call):
 
 if __name__=='__main__':
 
-    exchange_name("NIFTY","07Aug2021","23444","PE")
+    print(exchange_name("NIFTY","28Oct2021","18000","CE"))
 

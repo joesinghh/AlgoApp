@@ -5,7 +5,8 @@ from threading import Thread
 
 def insert_data_main(data,cols,filename=".\\OrderData\\order_data.xlsx"):
     # dataframe = pd.read_excel(filename)
-    # print(data)
+    print(data)
+
     df = pd.DataFrame([data],columns=cols)
     writer = pd.ExcelWriter(filename,engine='openpyxl')
     writer.book = load_workbook(filename)

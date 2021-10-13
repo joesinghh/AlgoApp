@@ -1,3 +1,4 @@
+from numpy.lib.function_base import insert
 from kite_api import Kite
 import threading
 from tkinter import *
@@ -23,16 +24,16 @@ BUY = "BUY"
 SELL = "SELL"
 EXIT_ALL = 0 
 
-# dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
-# pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
+dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
+pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
+completed_df = pd.read_excel('.\\OrderData\\completed.xlsx')
 
-# try :
-#     last_num = dataframe['SN'].iloc[-1]
-# except IndexError:
-#     last_num = 1
-# columns = dataframe.columns
-# print(columns)
-last_num = 1
+try :
+    last_num = dataframe['SN'].iloc[-1]
+except IndexError:
+    last_num = 1
+
+columns = dataframe.columns
 
 trade_threads  = 0
 y_value = 100
@@ -945,9 +946,13 @@ def place_realorder():
 
     isop = 0 #initial sop before placing order.
     # data variable store values related to the order.
-    data = [last_num+1,date_today,*instru,*bs,*pc,sdelta.get(),tdelta.get(),*strike_price,*expiry_dates,*quant,count]
+    try:
+        api_type = PlaceOrderClass.cls.__name__
+    except AttributeError as e:
+        api_type = "KiteFree"
+
+    data = [last_num+1,date_today,*instru,*bs,*pc,sdelta.get(),tdelta.get(),*strike_price,*expiry_dates,*quant,product_value, api_type, count]
     
-    data.append(product_value)
     m = MarketApi()
     if data !=None:
 
@@ -1022,18 +1027,30 @@ def place_realorder():
         preorderscreen()
         # t = Thread(target=insert_data,args=(data,columns,'.//OrderData//order_data.xlsx'))
         # t.start()
-        # insert_data(data,columns,'.//OrderData//order_data.xlsx')
+        insert_data(data,columns,'.//OrderData//order_data.xlsx')
+
+def get_class(string):
+
+    if string.lower()=="kitefree":
+        return AdapterApi(None)
+    elif string.lower()=="marketapi":
+        return AdapterApi(MarketApi)
+    elif string.lower()=="kite":
+        return AdapterApi(Kite)
+    else:
+        raise Exception("Invalid String")
+    
 
 def start_last_orders():
     """
     Start managing Pending/notcompleted orders.
     """
-    dataframe = fetch_data('.\\OrderData\\notcompleted.xlsx')
-    for data in dataframe:
-        order = ManageOrder(data)
-        order.create_widgets()  
-        order.current_sop()      
-        order.update_widgets()
+    # dataframe = fetch_data('.\\OrderData\\notcompleted.xlsx')
+    # for data in dataframe:
+    #     order = ManageOrder(data)
+    #     order.create_widgets()  
+    #     order.current_sop()      
+    #     order.update_widgets()
     
 
 def get_instru_id(symbol_,option,expiry,price_,series_):
@@ -1096,13 +1113,15 @@ class ManageOrder:
     def __init__(self,data) :
         
         self.data = data
+        print(data)
+        print(data[-3])
         self.y  = 20
-        self.sn = self.data[0]
-        self.product = data[-2]
+        self.sn = data[0]
+        self.product = data[-4]
         self.frame = Frame(display_frame,bg='#c7c8c9')
         self.frame.pack(fill='x',expand=1,ipady=50,side=TOP,pady=5)
         self.quantity = data[24:28]
-        self.date = self.data[1]
+        self.date = data[1]
         self.instrument = data[2:6]
         self.bs = data[6:10]
         self.pc = data[10:14]
@@ -1115,13 +1134,14 @@ class ManageOrder:
         self.pl = 0 # profit and loss value
         self.expiry_data = data[20:24]
         self.csop = self.initsop #current sop
-        self.market = PlaceOrderClass
+        self.market  = get_class(data[-3])
         self.num = data[0]
         self.quit = 0
-        self.count = self.data[-3]
+        self.count = data[-2]
         # self.current_sop()
         self.sdelta_variable = StringVar()
         self.tdelta_variable = StringVar()
+        self.pending_order()
 
     def display_symbol(self):
         """
@@ -1201,8 +1221,8 @@ class ManageOrder:
         mssg = messagebox.askyesno("Exit Trade","DO you want to exit Trade ?")
         if mssg:
             self.square_off()
+            self.delete_data_object(self.sn, self.date)
             self.destroy()
-
     def destroy(self):
         """
         Disables all the widget associated with an order
@@ -1257,30 +1277,26 @@ class ManageOrder:
         if self.quit!=1 : 
             t = Thread(target=self.current_sop)
             t.start()
-            time = datetime.now().time().strftime("%H:%M")
-            # if time.hour>=15 and time.minute>=0:
-            #     self.pending_order()
-            #     self.destroy()
-            #     return
+            time = datetime.now().time()
+            if time.hour>=15 and time.minute>=20:
+                self.destroy()
+                return
             try:
 
                 if ((self.csop)>=float(self.tdelta_variable.get())) or ((self.csop) < float(self.sdelta_variable.get())) and (self.sld!=0 and self.targetd!=0):
-
                     self.square_off()
+                    self.delete_data_object(self.sn,self.date)
                     self.destroy()
-                    # delete_data_object(self.sn,self.date)
                     return 
-                    pass
-
-
+                    
                 elif EXIT_ALL:
                     self.square_off()
+                    self.delete_data_object()
                     self.destroy()
-                    pass
+                    
             except:
                 pass
 
-    
             root.after(60000,self.update_widgets,self)
         else:
             print("DATA SAVED!")
@@ -1312,15 +1328,15 @@ class ManageOrder:
                 #Place order
                 self.place_order(id_,slide,self.quantity[i],tsymbol,lot)
 
-
+    
     def pending_order(self):
         """
         Stores details of order which is not completed. Details are stored in 
         notcompleted.xlsx. 
         """
-        new_data = [self.num,self.data[1],*self.instrument,*self.bs,*self.pc,self.sl,self.targetd,*self.strike_price,*self.expiry_data,*self.quantity,self.data[-2],self.csop]
-        # t = Thread(target=insert_data,args=(new_data,columns,'.\\OrderData\\notcompleted.xlsx'))
-        # t.start()
+        new_data = [self.num,self.data[1],*self.instrument,*self.bs,*self.pc,self.sld,self.targetd,*self.strike_price,*self.expiry_data,*self.quantity,self.product,self.data[-3],self.data[-2],self.initsop]
+        t = Thread(target=insert_data,args=(new_data,columns,'.\\OrderData\\notcompleted.xlsx'))
+        t.start()
 
     def place_order(self,id_,slide,q,tsymbol,size):
         """
@@ -1338,24 +1354,32 @@ class ManageOrder:
         except Exception as e:
             print("ERROR occured while placing square off order.",e)
 
-    @staticmethod
-    def delete_data_object(sn, date):
+    def delete_data_object(self, sn, date):
         """
         Deleted order from notcompleted.xlsx if it is 
         completed.
         """
-        # data = pending_df[(pending_df[columns[0]==sn]) & (pending_df[columns[1]==date])]
-        # if data:
-        #     row_count = 1
-        #     all_data = fetch_data('.\\OrderData\\notcompleted.xlsx')
-        #     for d in all_data:
+        # pending_df = 
+        curdate = str(datetime.now())
+        print(curdate)
+        pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
+        print(pending_df[columns[0]])
+        print(pending_df[columns[1]])
+        data = pending_df.loc[(pending_df[columns[0]]==sn) & (pending_df[columns[1]]==date)]
+        print(data.values)
+        if data.values.tolist:
+            row_count = 1
+            all_data = fetch_data('.\\OrderData\\notcompleted.xlsx')
+            for d in all_data:
 
-        #         if d[0]==sn and d[1]==date:
-        #             break
-        #         row_count+=1
+                if d[0]==sn and d[1]==date:
+                    break
+                row_count+=1
             
-        #     delete_thread = Thread(target=delete_data,args=(row_count,))
-        #     delete_thread.start()
+            delete_thread = Thread(target=delete_data,args=(row_count,))
+            delete_thread.start()
+            print("Completed data ",data.values.tolist())
+            insert_data(data.values.tolist().extend([curdate,self.csop]),completed_df.columns,filename='.\\OrderData\\completed.xlsx')
 
 
 def dummy_buy_ask():
@@ -1430,13 +1454,7 @@ root = Tk()
 root.geometry("950x600")
 root.title("AlgoApp")
 
-try :
 
-    start_orders = Thread(target=start_last_orders)
-    start_orders.start()
-
-except xlrd.biffh.XLRDError:
-    print("Nothing to show")
 
 
 menu = Menu(root)
@@ -1779,4 +1797,11 @@ isop_value.place(x=470,y=550,width=70)
 
 set_top() #create trademanagement screen
 create_api_top() # create API selection screen.
+try :
+
+    start_orders = Thread(target=start_last_orders)
+    start_orders.start()
+
+except xlrd.biffh.XLRDError:
+    print("Nothing to show")
 root.mainloop()

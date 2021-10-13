@@ -32,7 +32,11 @@
 
 #Pending
 []. add isop widget : create a thread lock in price_update Thread
-[]. Store completed order data in completed.xlsx
+[]. add sld and targetd widgets 
+[]. debug.
+[]. load open orders.
+
+
 
 
 {
