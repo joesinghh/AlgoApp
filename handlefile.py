@@ -5,7 +5,6 @@ from threading import Thread
 
 def insert_data_main(data,cols,filename=".\\OrderData\\order_data.xlsx"):
     # dataframe = pd.read_excel(filename)
-    print(data)
 
     df = pd.DataFrame([data],columns=cols)
     writer = pd.ExcelWriter(filename,engine='openpyxl')
@@ -28,10 +27,19 @@ def delete_data(row_index):
     book = load_workbook('.\\OrderData\\notcompleted.xlsx')
     sheet = book['Sheet1']
     sheet.delete_rows(row_index)
+    book.save('.\\OrderData\\notcompleted.xlsx')
+
+def change_data(data, new_sl, new_target):
+    workbook = load_workbook('.\\OrderData\\notcompleted.xlsx')
+    sheet = workbook['Sheet1']
+    sheet.cell(data.index[0]+2,15).value = new_sl
+    sheet.cell(data.index[0]+2,16).value = new_target
+    workbook.save('.\\OrderData\\notcompleted.xlsx')
+    
 
 if __name__=="__main__":
     
-    dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
-    last_num  = dataframe.values
-    print(last_num)
-    
+    # dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
+    # last_num  = dataframe.values
+    # print(last_num)
+    delete_data(2)

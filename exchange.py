@@ -18,7 +18,7 @@ def convert_date(date):
     datetime.date
         Date object with changed format.
     """
-    date = datetime.strptime(date,"%d-%m-%Y %b").date()
+    date = datetime.strptime(str(date),"%d-%m-%Y %b").date()
     date = date.strftime("%d%b%Y")
     return date
                          

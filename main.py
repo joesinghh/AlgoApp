@@ -1,3 +1,4 @@
+from numpy.core.arrayprint import DatetimeFormat
 from numpy.lib.function_base import insert
 from kite_api import Kite
 import threading
@@ -9,17 +10,16 @@ from ifl_api import MarketApi
 from tkinter import messagebox
 import pandas as pd
 from datetime import date,datetime
-from handlefile import delete_data, fetch_data, insert_data, insert_data_main, fetch_data
+from handlefile import delete_data, fetch_data, insert_data, insert_data_main, fetch_data, change_data
 from Auto import AutocompleteCombobox
 import platform
 import time
 import xlrd
 from Adapter import AdapterApi
 from exchange import exchange_name, convert_date
+import numpy as np
 
-date_today = str(date.today())  #Today's date 
-
-
+   
 BUY = "BUY"
 SELL = "SELL"
 EXIT_ALL = 0 
@@ -31,7 +31,14 @@ completed_df = pd.read_excel('.\\OrderData\\completed.xlsx')
 try :
     last_num = dataframe['SN'].iloc[-1]
 except IndexError:
+    # print("INDEX ERROR")
     last_num = 1
+
+try : 
+    last_cnum = dataframe['SN'].iloc[-1]
+except IndexError:
+    # print("INDEX ERROR")
+    last_cnum = 1
 
 columns = dataframe.columns
 
@@ -50,6 +57,8 @@ lsize_thread1 = 0
 lsize_thread2 = 0
 lsize_thread3 = 0
 lsize_thread4 = 0
+
+isop_thread = 0
 
 PlaceOrderClass = AdapterApi(None) #Adapter Class
 
@@ -118,13 +127,17 @@ def exit_all_trade():
     All trades will be squared off.
     """
     global EXIT_ALL
-    EXIT_ALL  = 1
+    mssg = messagebox.askyesno("EXIT","Do you want to exit all orders ?")
+    if mssg:
+        EXIT_ALL  = 1
+
+    
 
 def clear_order_variables():
     """
     Clear OrderScreen variables and set new values.
     """
-    product_type.set("NRML")
+    product_type.set("MIS")
     bs1.set(None)
     bs2.set(None)
     bs3.set(None)
@@ -311,12 +324,16 @@ def update_order(n):
         int specifying number of order instruments to manage.
         This number depends on the strategy choosen on placeorder screen. 
     """
-    global price_thread1, price_thread2, price_thread3, price_thread4, lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4
+    global price_thread1, price_thread2, price_thread3, price_thread4, lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4,\
+    isop_thread
+
     instru_value  = instu.get()
     expiry_date = expiry.get()
     api_expiry_date = convert_date(expiry_date)
     lots_num = lots.get()
+    isop_thread = 1
     s = "OPTSTK"
+
     if instru_value.find("NIFTY")!=-1:
         s = "OPTIDX"
 
@@ -632,9 +649,8 @@ def update_price_label():
         t3.start()
         t4 = Thread(target=price_update_thread4,args=())
         t4.start()
-def isop_update():
-    price = 0
-    
+    t5 = Thread(target=update_isop,args=())
+    t5.start()
 
 def price_update_thread1():
     """
@@ -656,9 +672,9 @@ def price_update_thread1():
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
             if bs1.get()==BUY:
-                premium1.set(str(m_ask[0]))
+                premium1.set(float(m_ask[0]))
             else:
-                premium1.set(str(m_bid[0]))
+                premium1.set(float(m_bid[0]))
 
         except Exception as e:
             print("price update 1 ",e)
@@ -772,7 +788,27 @@ def price_update_thread4():
         price_update_thread4()
     else:
         return
+
+def update_isop():
+
+    bs = [bs1.get(), bs2.get(), bs3.get(), bs4.get()]
+    price_list = [premium1.get(), premium2.get(), premium3.get(), premium4.get()]
+    isop = 0
+    for i in range(4):
+        if bs[i]=="BUY":
+            isop+=float(price_list[i])
+        elif bs[i]=="SELL":
+            isop-=float(price_list[i])
+
+    isop_value['text'] = str(isop)
     
+    if isop_thread:
+        time.sleep(4.9)
+        update_isop()
+    else:
+        return
+
+
 def update_lotlabel():
     """
     Function to start Threads for updating lot size
@@ -916,14 +952,16 @@ def place_realorder():
     the order in `OrderData//orders_data.xlsx` after it is placed.
     """
     global last_num,trade_threads,y_value, price_thread1, price_thread2,\
-    price_thread3, price_thread4, lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4, EXIT_ALL
+    price_thread3, price_thread4, lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4, EXIT_ALL,\
+    isop_thread
+
     
     EXIT_ALL = 0
     product_value = product_type.get()
     quant = [l1.get(),l2.get(),l3.get(),l4.get()]
     data = None
     count = 4 - quant.count(0)
-            
+    date_today = str(datetime.now())
     i1 = s1instru.get()
     i2 = s2instru.get()
     i3 = s3instru.get()
@@ -943,7 +981,13 @@ def place_realorder():
     # buy_sell = [b1,b2,b3,b4]
     instru = [i1,i2,i3,i4]
     bs, pc, expiry_dates, instru, quant, strike_price = zip(*sorted(zip(bs, pc, expiry_dates, instru, quant,strike_price),key=lambda x: x[0]))
-
+    instru = list(instru)
+    expiry_dates = list(expiry_dates)
+    for r in range(len(instru)):
+        if instru[r]=="":
+            instru[r] = "None"
+            expiry_dates[r] = "None"
+        
     isop = 0 #initial sop before placing order.
     # data variable store values related to the order.
     try:
@@ -951,11 +995,10 @@ def place_realorder():
     except AttributeError as e:
         api_type = "KiteFree"
 
-    data = [last_num+1,date_today,*instru,*bs,*pc,sdelta.get(),tdelta.get(),*strike_price,*expiry_dates,*quant,product_value, api_type, count]
+    data = [last_num,date_today,*instru,*bs,*pc,sdelta.get(),tdelta.get(),*strike_price,*expiry_dates,*quant,product_value, api_type, count]
     
     m = MarketApi()
     if data !=None:
-
         last_num+=1
 
         for j in range(len(bs)):
@@ -998,13 +1041,13 @@ def place_realorder():
                     Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,size=instru_lot_size,product_type=product_type)
 
                 make_first_order(id_,slide,quant[j],tsymbol,instru_lot_size,product_type=product_value)
-                messagebox.showinfo("ORDER STATUS","Your order is placed!")
+                # 
 
             except Exception as e:
                 print("Order not placed",e)
                 messagebox.showerror("ERROR",e)
                 return
-            
+        
             # stop updating market price.
             price_thread1 = 0
             price_thread2 = 0
@@ -1016,12 +1059,15 @@ def place_realorder():
             lsize_thread3 = 0
             lsize_thread4 = 0
 
-
+            isop_thread = 0
+            
+        messagebox.showinfo("ORDER STATUS","Your order is placed!")
         data.append(isop)
 
         order = ManageOrder(data)
         order.create_widgets()
         order.current_sop()
+        order.pending_order()
         order.update_widgets()
         # Redirect to Preorder Screen to place more orders.
         preorderscreen()
@@ -1043,14 +1089,14 @@ def get_class(string):
 
 def start_last_orders():
     """
-    Start managing Pending/notcompleted orders.
+    Start managing notcompleted orders.
     """
-    # dataframe = fetch_data('.\\OrderData\\notcompleted.xlsx')
-    # for data in dataframe:
-    #     order = ManageOrder(data)
-    #     order.create_widgets()  
-    #     order.current_sop()      
-    #     order.update_widgets()
+    dataframe = fetch_data('.\\OrderData\\notcompleted.xlsx')
+    for data in dataframe:
+        order = ManageOrder(data)
+        order.create_widgets()  
+        order.current_sop()      
+        order.update_widgets()
     
 
 def get_instru_id(symbol_,option,expiry,price_,series_):
@@ -1119,7 +1165,7 @@ class ManageOrder:
         self.sn = data[0]
         self.product = data[-4]
         self.frame = Frame(display_frame,bg='#c7c8c9')
-        self.frame.pack(fill='x',expand=1,ipady=50,side=TOP,pady=5)
+        self.frame.pack(fill='x',expand=1,ipady=80,side=TOP,pady=5)
         self.quantity = data[24:28]
         self.date = data[1]
         self.instrument = data[2:6]
@@ -1138,10 +1184,13 @@ class ManageOrder:
         self.num = data[0]
         self.quit = 0
         self.count = data[-2]
-        # self.current_sop()
-        self.sdelta_variable = StringVar()
-        self.tdelta_variable = StringVar()
-        self.pending_order()
+        self.sl_variable = StringVar()
+        self.target_variable = StringVar()
+        self.sldelta_var  = StringVar()
+        self.tdelta_var = StringVar()
+        self.sldelta_var.set(str(self.sld))
+        self.tdelta_var.set(str(self.targetd))
+
 
     def display_symbol(self):
         """
@@ -1152,15 +1201,15 @@ class ManageOrder:
         x_place_value = 0.02
         for i in range(len(self.instrument)):
 
-            if self.instrument[i]!=None and self.instrument[i]!='' and not self.instrument[i].isspace():
+            if self.instrument[i] and self.expiry_data[i] not in ['',None,'None']:
                 name = self.instrument[i]
-                
+
                 o = "PE"
                 if self.pc[i]=="CE":
                     o = "CE"
 
                 tsymbol = exchange_name(name, convert_date(self.expiry_data[i]),self.strike_price[i],o)
-                Label(self.frame,text=tsymbol,bg='#c7c8c9').place(y=70,relx=x_place_value)
+                Label(self.frame,text=tsymbol,bg='#c7c8c9').place(y=130,relx=x_place_value)
                 x_place_value+=0.22
         
 
@@ -1171,7 +1220,7 @@ class ManageOrder:
         """
         sop = 0
         for i in range(len(self.instrument)):
-            if self.instrument[i]!=None and self.instrument!='' and self.expiry_data[i]!='':
+            if self.instrument[i] and self.expiry_data[i] not in ['',None,'None']:
                 
                 
                 name = self.instrument[i]
@@ -1223,6 +1272,7 @@ class ManageOrder:
             self.square_off()
             self.delete_data_object(self.sn, self.date)
             self.destroy()
+
     def destroy(self):
         """
         Disables all the widget associated with an order
@@ -1248,19 +1298,31 @@ class ManageOrder:
         self.currsop = Label(self.frame,text=f"{self.csop:.2f}")
         self.currsop.place(x=150,y=self.y,width=80)
         
-        self.sdelta = Entry(self.frame,textvariable= self.sdelta_variable)
+        self.sdelta = Entry(self.frame,textvariable= self.sl_variable)
         self.sdelta.place(x=390,y=self.y,width=82)
-        self.sdelta_variable.set(f"{self.sl:.2f}")
+        self.sl_variable.set(f"{self.sl:.2f}")
 
         self.p_and_l  = Label(self.frame,text=f"{self.pl:.2f}")
         self.p_and_l.place(x=510,y=self.y,width=82)
 
-        self.tdelta = Entry(self.frame,textvariable=self.tdelta_variable)
+        self.tdelta = Entry(self.frame,textvariable=self.target_variable)
         self.tdelta.place(x=280,y=self.y,width=80)
-        self.tdelta_variable.set(f"{self.target:.2f}")
+        self.target_variable.set(f"{self.target:.2f}")
 
         self.exit_trade  = Button(self.frame,text='Exit',command=self.exit_trade)
         self.exit_trade.place(x=630,y=self.y)
+        
+        Label(self.frame, text='SL delta :').place(x=30,y=self.y+50)
+        self.sldelta_input = Entry(self.frame,textvariable=self.sldelta_var)
+        self.sldelta_input.place(x=90,y=self.y+50,width=90)
+        
+        Label(self.frame,text='Target delta :').place(x=250,y=self.y+50)
+        self.tdelta_input = Entry(self.frame,textvariable=self.tdelta_var)
+        self.tdelta_input.place(x=330,y=self.y+50,width=90)
+
+        self.update_button = Button(self.frame,text='Update Delta',command=self.update_delta)
+        self.update_button.place(x=450,y=self.y+50)
+
         self.display_symbol()
 
 
@@ -1275,15 +1337,17 @@ class ManageOrder:
         added to notcompleted.xlsx.
         """
         if self.quit!=1 : 
-            t = Thread(target=self.current_sop)
-            t.start()
+            # t = Thread(target=self.current_sop)
+            # t.start()
+            self.current_sop()
             time = datetime.now().time()
             if time.hour>=15 and time.minute>=20:
                 self.destroy()
+                self.delete_data_object(self.sn,self.date)
                 return
             try:
 
-                if ((self.csop)>=float(self.tdelta_variable.get())) or ((self.csop) < float(self.sdelta_variable.get())) and (self.sld!=0 and self.targetd!=0):
+                if ((self.csop)>=float(self.target_variable.get())) or ((self.csop) < float(self.sl_variable.get())) and (self.sld!=0 and self.targetd!=0):
                     self.square_off()
                     self.delete_data_object(self.sn,self.date)
                     self.destroy()
@@ -1291,13 +1355,14 @@ class ManageOrder:
                     
                 elif EXIT_ALL:
                     self.square_off()
-                    self.delete_data_object()
+                    self.delete_data_object(self.sn,self.date)
                     self.destroy()
+                    return
                     
             except:
                 pass
 
-            root.after(60000,self.update_widgets,self)
+            root.after(10000,self.update_widgets,self)
         else:
             print("DATA SAVED!")
 
@@ -1307,7 +1372,7 @@ class ManageOrder:
         vise versa.
         """
         for i in range(len(self.instrument)):
-            if self.instrument[i]!=None and self.instrument[i]!='' and not self.instrument[i].isspace():
+            if self.instrument[i] and self.expiry_data[i] not in ['',None,'None']:
                 name = self.instrument[i]
                 series = "OPTSTK"
                 if name.find("NIFTY")!=-1:
@@ -1359,28 +1424,47 @@ class ManageOrder:
         Deleted order from notcompleted.xlsx if it is 
         completed.
         """
+        global last_cnum
         # pending_df = 
         curdate = str(datetime.now())
-        print(curdate)
         pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
-        print(pending_df[columns[0]])
-        print(pending_df[columns[1]])
         data = pending_df.loc[(pending_df[columns[0]]==sn) & (pending_df[columns[1]]==date)]
-        print(data.values)
         if data.values.tolist:
-            row_count = 1
-            all_data = fetch_data('.\\OrderData\\notcompleted.xlsx')
-            for d in all_data:
+            # row_count = 1
+            # all_data = fetch_data('.\\OrderData\\notcompleted.xlsx')
+            # for d in all_data:
 
-                if d[0]==sn and d[1]==date:
-                    break
-                row_count+=1
+            #     if d[0]==sn and d[1]==date:
+            #         break
+            #     row_count+=1
+            print("INDEX ",data.index)
+            row_count = data.index[0] + 2
             
             delete_thread = Thread(target=delete_data,args=(row_count,))
             delete_thread.start()
-            print("Completed data ",data.values.tolist())
-            insert_data(data.values.tolist().extend([curdate,self.csop]),completed_df.columns,filename='.\\OrderData\\completed.xlsx')
+            
+            row = data.values.tolist()[0]
+            row[0] = last_cnum
+            row+=[curdate,self.csop]
+            last_cnum+=1
+            print(f"ROW {row}")
+            insert_data(row,completed_df.columns,filename='.\\OrderData\\completed.xlsx')
 
+    def update_delta(self):
+        self.sld = float(self.sldelta_var.get())
+        self.targetd = float(self.tdelta_var.get())
+        self.target = (self.initsop + self.targetd)
+        self.sl = (self.initsop-self.sld)
+        self.target_variable.set(f"{self.target:.2f}")
+        self.sl_variable.set(f"{self.sl:.2f}")
+        self.update_noncompleted_order()
+        
+    def update_noncompleted_order(self):
+        pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
+        data = pending_df.loc[(pending_df[columns[0]]==self.sn) & (pending_df[columns[1]]==self.date)]
+        t = Thread(target=change_data,args=(data, self.sld, self.targetd))
+        t.start()
+        
 
 def dummy_buy_ask():
     t = Thread(target=buy_ask_get)
@@ -1448,6 +1532,17 @@ def kite_free_login():
     t = Thread(target=login,args=())
     t.start()
 
+def pending_order_start():
+    try :
+
+        start_orders = Thread(target=start_last_orders)
+        start_orders.start()
+
+    except xlrd.biffh.XLRDError:
+        messagebox.showerror("Error","Nothing in file.")
+    except Exception as e:
+        messagebox.showerror("Error",e)
+
 ###-main_###
 
 root = Tk()
@@ -1471,6 +1566,8 @@ submenu2.add_command(label="Kite API")
 menu.add_cascade(menu=submenu1,label="Options")
 menu.add_cascade(menu=submenu2,label="Login")
 menu.add_command(label=" API ",command=order_api)
+menu.add_command(label="Start Old Orders", command=pending_order_start)
+menu.add_command(label="Exit all",command=exit_all_trade)
 
 
 root.config(menu=menu)
@@ -1535,7 +1632,7 @@ sdelta = IntVar()
 tdelta = IntVar()
 
 product_type = StringVar()
-product_type.set("NRML")
+product_type.set("MIS")
 
 date_list = getexpiry()
 
@@ -1797,11 +1894,5 @@ isop_value.place(x=470,y=550,width=70)
 
 set_top() #create trademanagement screen
 create_api_top() # create API selection screen.
-try :
 
-    start_orders = Thread(target=start_last_orders)
-    start_orders.start()
-
-except xlrd.biffh.XLRDError:
-    print("Nothing to show")
 root.mainloop()

@@ -30,11 +30,32 @@
 [X]. Change CE/PE
 [X]. Fix calculation.
 
+[X]. load open orders.
+[X]. add isop widget : create a thread lock in price_update Thread
+
+
 #Pending
-[]. add isop widget : create a thread lock in price_update Thread
-[]. add sld and targetd widgets 
+[]. change date to time.
+[]. add exit all.
 []. debug.
-[]. load open orders.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
