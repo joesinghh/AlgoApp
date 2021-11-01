@@ -1,11 +1,18 @@
+import logging
+import traceback
 import requests
 import os
 from dotenv import load_dotenv
 from requests.api import request
 import json
+import logging.config
+import traceback
+
+logging.config.fileConfig('.\\Logs\\log.ini',disable_existing_loggers=False)
+logging.getLogger(__name__)
+
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
-
 null = 0
 false = False
 true = True
@@ -52,7 +59,7 @@ class MarketApi(object):
         with open(file,'r+') as fp:
             data = fp.read()
             if(len(data)<=2):
-                self.login2()
+                self.logini()
                 fp.write(self.tokeni)
                 f = open(".\\Tokens\\clientID.txt","r+")
                 f.write(self.cid)
@@ -99,7 +106,7 @@ class MarketApi(object):
 
         r = requests.post(self.baseurl+self.loginpath, json = json)
         if self.checkresponse(r):
-            print("Login successful")
+            
             self.token = r.json()['result']['token']
             with open(self.file,"w") as f:
                 f.write(self.token)
@@ -138,21 +145,25 @@ class MarketApi(object):
             "xtsMessageCode": xts,
             "publishFormat" : publish
         }
-        # print("ID :",instrument_id)
-
 
         r = requests.post(self.baseurl+self.getquoteurl,json = json,headers = self.headers)
         if(self.checkresponse(r)):
-            self.quote = eval(r.json()['result']['listQuotes'][0])
-            # print(self.quote)
+            try:
+
+                self.quote = eval(r.json()['result']['listQuotes'][0])
+            except Exception as e:
+                logging.error(e,exc_info=True)
+                print(e)
+            
             self.bids = [self.quote['Bids'][0]['Price'],self.quote['Bids'][1]['Price'],self.quote['Bids'][2]['Price']]
             self.asks = [self.quote['Asks'][0]['Price'],self.quote['Asks'][1]['Price'],self.quote['Asks'][2]['Price']]
-            print(f"{instrument_id} BUY",self.bids[0])
-            print(f"{instrument_id} SELL",self.asks[0])
+            # print(f"{instrument_id} BUY",self.bids[0])
+            # print(f"{instrument_id} SELL",self.asks[0])
             return self.bids, self.asks
 
         else:
-            return None
+            logging.error(r.text)
+            print(r.text)
 
        
     def getToken(self):
@@ -186,12 +197,11 @@ class MarketApi(object):
         r = requests.get(self.baseurl+self.expath+f"?exchangeSegment={esegment}&series={series}&symbol={symbol}",verify=False)
         if self.checkresponse(r):
             self.listexp = [date.split("T")[0] for date in  list(r.json()['result'])]
-            # print("EXPIRY",self.listexp)
+            
             return self.listexp
 
         else:
-            print("Data not avialable")
-            print(r.text,r.status_code)
+            print(r.text)
             return None
 
     def get_option_symbol(self,symbol,expirydate,otype,sprice,series,esegment=2):
@@ -215,7 +225,7 @@ class MarketApi(object):
             return lot_size, self.instrument_id
 
         else:
-            print(r.json())
+            
             return None, None
     def place_order(self,eid=3045, oslide="SELL" , quantity=1, ouid='',*args):
         json = {

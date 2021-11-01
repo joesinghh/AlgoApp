@@ -1,7 +1,6 @@
 from numpy.core.arrayprint import DatetimeFormat
 from numpy.lib.function_base import insert
 from kite_api import Kite
-import threading
 from tkinter import *
 from threading import Thread, Lock
 from tkinter.ttk import Combobox
@@ -18,27 +17,35 @@ import xlrd
 from Adapter import AdapterApi
 from exchange import exchange_name, convert_date
 import numpy as np
+import logging.config
+import traceback
+
+logging.config.fileConfig(r'.\Logs\log.ini',disable_existing_loggers=False)
+logging.getLogger(__name__)
 
    
 BUY = "BUY"
 SELL = "SELL"
 EXIT_ALL = 0 
 
-dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
-pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
-completed_df = pd.read_excel('.\\OrderData\\completed.xlsx')
+try:
+    dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
+    pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
+    completed_df = pd.read_excel('.\\OrderData\\completed.xlsx')
+except:
+    logging.error("Exception: %s", traceback.format_exc())
 
 try :
     last_num = dataframe['SN'].iloc[-1]
-except IndexError:
-    # print("INDEX ERROR")
+except IndexError as e:
     last_num = 1
+    logging.error(e, exc_info=True)
 
 try : 
     last_cnum = dataframe['SN'].iloc[-1]
-except IndexError:
-    # print("INDEX ERROR")
+except IndexError as e:
     last_cnum = 1
+    logging.error(e, exc_info=True)
 
 columns = dataframe.columns
 
@@ -120,7 +127,6 @@ class ScrollFrame(Frame):
             self.canvas.unbind_all("<MouseWheel>")
 
 
-
 def exit_all_trade():
     """
     Exit all Trade at a given moment.
@@ -132,7 +138,6 @@ def exit_all_trade():
         EXIT_ALL  = 1
 
     
-
 def clear_order_variables():
     """
     Clear OrderScreen variables and set new values.
@@ -183,6 +188,9 @@ def clear():
     """
     Clear PlaceOrder screen variables and assign new values.
     """
+    global price_thread1, price_thread2, price_thread3, price_thread4,\
+        lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4
+
     ls.set(-1)
     cp.set(-1)
     st1.set(0)
@@ -197,6 +205,18 @@ def clear():
     Bid_label['text'] = "None"
     Ask_label['text'] = "None"
     inable_all()
+
+    price_thread1 = 0
+    price_thread2 = 0
+    price_thread3 = 0
+    price_thread4 = 0
+
+    lsize_thread1 = 0
+    lsize_thread2 = 0
+    lsize_thread3 = 0
+    lsize_thread4 = 0
+    
+
 
 def preorderscreen():
     clear()
@@ -301,6 +321,7 @@ def setorder():
             messagebox.showerror("ERROR","Invalid Lot Size")
     except Exception as e:
         messagebox.showerror("ERROR",e+" for Lot No.")
+        logging.error(e,exc_info=True)
         return 0
         
     else:
@@ -671,6 +692,7 @@ def price_update_thread1():
             _, id_ = get_instru_id(instru,o,convert_date(expiry1.get()),price1.get(),series)
             m  = MarketApi()
             m_bid, m_ask = m.get_quote(id_,2,1502)
+            
             if bs1.get()==BUY:
                 premium1.set(float(m_ask[0]))
             else:
@@ -678,6 +700,7 @@ def price_update_thread1():
 
         except Exception as e:
             print("price update 1 ",e)
+            logging.error(e,exc_info=True)
 
     if price_thread1:
         time.sleep(5)
@@ -713,8 +736,9 @@ def price_update_thread2():
                 premium2.set(str(m_bid[0]))
 
         except Exception as e:
-
             print("price update 2 ",e)
+            logging.error(e,exc_info=True)
+
     if price_thread2:
         time.sleep(5)
         price_update_thread2()
@@ -747,6 +771,8 @@ def price_update_thread3():
 
         except Exception as e:
             print("price update 3 ",e)
+            logging.error(e,exc_info=True)
+
 
     if price_thread3:
         time.sleep(5)
@@ -782,6 +808,8 @@ def price_update_thread4():
 
         except Exception as e:
             print("price update 4 ",e)
+            logging.error(e,exc_info=True)
+
 
     if  price_thread4:
         time.sleep(5)
@@ -791,17 +819,22 @@ def price_update_thread4():
 
 def update_isop():
 
-    bs = [bs1.get(), bs2.get(), bs3.get(), bs4.get()]
-    price_list = [premium1.get(), premium2.get(), premium3.get(), premium4.get()]
-    isop = 0
-    for i in range(4):
-        if bs[i]=="BUY":
-            isop+=float(price_list[i])
-        elif bs[i]=="SELL":
-            isop-=float(price_list[i])
+    try:
 
-    isop_value['text'] = str(isop)
-    
+        bs = [bs1.get(), bs2.get(), bs3.get(), bs4.get()]
+        lots = [l1.get(), l2.get(), l3.get(), l4.get()]
+        price_list = [premium1.get(), premium2.get(), premium3.get(), premium4.get()]
+        isop = 0
+        for i in range(4):
+            if bs[i]=="BUY":
+                isop+=(lots[i]*price_list[i])
+            elif bs[i]=="SELL":
+                isop-=(lots[i]*price_list[i])
+
+        isop_value['text'] = f'{isop:.2f}'
+    except Exception as e:
+        logging.error(e,exc_info=True)
+        
     if isop_thread:
         time.sleep(4.9)
         update_isop()
@@ -861,6 +894,8 @@ def set_lot_label1():
             lotdata1.set(str(lotsize))
         except Exception as e:
             print("Lot size 1 ",e)
+            logging.error(e,exc_info=True)
+
     if lsize_thread1:
         time.sleep(5)
         set_lot_label1()
@@ -886,6 +921,8 @@ def set_lot_label2():
             lotdata2.set(str(lotsize))
         except Exception as e:
             print("lot size 2 ",e)
+            logging.error(e,exc_info=True)
+
     if lsize_thread2:
         time.sleep(5)
         set_lot_label2()
@@ -912,6 +949,8 @@ def set_lot_label3():
             lotdata3.set(str(lotsize))
         except Exception as e:
             print("lot size 3 ",e)
+            logging.error(e,exc_info=True)
+
     if lsize_thread3:
         time.sleep(5)
         set_lot_label3()
@@ -938,6 +977,8 @@ def set_lot_label4():
             lotdata4.set(str(lotsize))
         except Exception as e:
             print("lot size 4 ",e)
+            logging.error(e,exc_info=True)
+
     if lsize_thread4:
         time.sleep(5)
         set_lot_label4()
@@ -994,13 +1035,14 @@ def place_realorder():
         api_type = PlaceOrderClass.cls.__name__
     except AttributeError as e:
         api_type = "KiteFree"
+        logging.error(e,exc_info=True)
 
+    last_num+=1
     data = [last_num,date_today,*instru,*bs,*pc,sdelta.get(),tdelta.get(),*strike_price,*expiry_dates,*quant,product_value, api_type, count]
     
     m = MarketApi()
     if data !=None:
-        last_num+=1
-
+        
         for j in range(len(bs)):
             if bs[j]=="None":
                 continue
@@ -1022,30 +1064,35 @@ def place_realorder():
 
             except Exception as e:
                 messagebox.showerror("Error","Error while obtaining intrument id. Couldn't place order.")
+                logging.error(e,exc_info=True)
                 return
 
             if bs[j]==BUY:
                 price = m.asks[0]
-                isop+=price
+                isop+=(quant[j]*price)
                 slide = BUY
             else:
                 price = m.bids[0]
-                isop-=price
+                isop-=(quant[j]*price)
                 slide = SELL
             
             try:
                 Place = PlaceOrderClass
                 tsymbol = exchange_name(name, exp_date,strike_price[j],o) # Trading symbol
-
+                
                 def make_first_order(id_,slide,q,tradingsymbol,instru_lot_size,product_type):
                     Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,size=instru_lot_size,product_type=product_type)
 
-                make_first_order(id_,slide,quant[j],tsymbol,instru_lot_size,product_type=product_value)
+                # make_first_order(id_,slide,quant[j],tsymbol,instru_lot_size,product_type=product_value)
                 # 
+
+                messagebox.showinfo("ORDER STATUS",f"{tsymbol} is placed!")
+
 
             except Exception as e:
                 print("Order not placed",e)
-                messagebox.showerror("ERROR",e)
+                messagebox.showerror("ERROR",f"{tsymbol}\n{e}")
+                logging.error(e,exc_info=True)
                 return
         
             # stop updating market price.
@@ -1061,7 +1108,6 @@ def place_realorder():
 
             isop_thread = 0
             
-        messagebox.showinfo("ORDER STATUS","Your order is placed!")
         data.append(isop)
 
         order = ManageOrder(data)
@@ -1073,7 +1119,23 @@ def place_realorder():
         preorderscreen()
         # t = Thread(target=insert_data,args=(data,columns,'.//OrderData//order_data.xlsx'))
         # t.start()
-        insert_data(data,columns,'.//OrderData//order_data.xlsx')
+        insert_data(data,columns,'.\\OrderData\\order_data.xlsx')
+
+def stop_bg_threads():
+    global price_thread1, price_thread2, price_thread3, price_thread4,\
+        lsize_thread1, lsize_thread2, lsize_thread3, lsize_thread4, isop_thread
+
+    price_thread1 = 0
+    price_thread2 = 0
+    price_thread3 = 0
+    price_thread4 = 0
+
+    lsize_thread1 = 0
+    lsize_thread2 = 0
+    lsize_thread3 = 0
+    lsize_thread4 = 0
+
+    isop_thread = 0
 
 def get_class(string):
 
@@ -1091,14 +1153,15 @@ def start_last_orders():
     """
     Start managing notcompleted orders.
     """
-    dataframe = fetch_data('.\\OrderData\\notcompleted.xlsx')
-    for data in dataframe:
-        order = ManageOrder(data)
-        order.create_widgets()  
-        order.current_sop()      
-        order.update_widgets()
+    mssg = messagebox.askyesno("Start Orders?","Do you want to start non completed orders?")
+    if mssg:
+        dataframe = fetch_data('.\\OrderData\\notcompleted.xlsx')
+        for data in dataframe:
+            order = ManageOrder(data)
+            order.create_widgets()  
+            order.current_sop()      
+            order.update_widgets()
     
-
 def get_instru_id(symbol_,option,expiry,price_,series_):
     """
     Returns instrument id and lot size of a trading symbol.
@@ -1234,19 +1297,24 @@ class ManageOrder:
 
                 elif self.pc[i]:
                     o = "CE"
+                try:
 
-                _, id_ = get_instru_id(name,o,convert_date(self.expiry_data[i]),self.strike_price[i],series)
-             
-                m = MarketApi()
-                m.get_quote(id_,2,1502)
-            
-                if self.bs[i]==SELL: # check BUY/SELL value
-                    price = m.asks[0]
-                    sop-=price
-                else:
-                    price = m.bids[0]  
-                    sop+=price
-                print(name,'+',self.bs[i],"+ Current sop : ",sop,"Price : ",price)
+                    _, id_ = get_instru_id(name,o,convert_date(self.expiry_data[i]),self.strike_price[i],series)
+                    m = MarketApi()
+                    m.get_quote(id_,2,1502)
+                    # print(m.asks[0])
+                    # print(m.bids[0])
+                    if self.bs[i]==SELL: # check BUY/SELL value
+                        price = m.asks[0]
+                        sop-=(self.quantity[i]*price)
+                    else:
+                        price = m.bids[0]  
+                        sop+=(self.quantity[i]*price)
+                    # print(sop,self.quantity,price)
+                except  Exception as e:
+                    print(e)
+                    logging.error(f"{e} INSTU {name} EXPIRY {self.expiry_data[i]} SP {self.strike_price[i]}",exc_info=True)
+
             else:
                 continue
         
@@ -1286,6 +1354,7 @@ class ManageOrder:
         self.tdelta['state'] = 'disable'
         self.exit_trade['state'] = 'disable'
         self.exit_trade['bg'] = 'red'
+        self.update_button['state'] = 'disable'
         
     def create_widgets(self):
         """
@@ -1298,14 +1367,14 @@ class ManageOrder:
         self.currsop = Label(self.frame,text=f"{self.csop:.2f}")
         self.currsop.place(x=150,y=self.y,width=80)
         
-        self.sdelta = Entry(self.frame,textvariable= self.sl_variable)
+        self.sdelta = Label(self.frame,textvariable= self.sl_variable)
         self.sdelta.place(x=390,y=self.y,width=82)
         self.sl_variable.set(f"{self.sl:.2f}")
 
         self.p_and_l  = Label(self.frame,text=f"{self.pl:.2f}")
         self.p_and_l.place(x=510,y=self.y,width=82)
 
-        self.tdelta = Entry(self.frame,textvariable=self.target_variable)
+        self.tdelta = Label(self.frame,textvariable=self.target_variable)
         self.tdelta.place(x=280,y=self.y,width=80)
         self.target_variable.set(f"{self.target:.2f}")
 
@@ -1337,14 +1406,14 @@ class ManageOrder:
         added to notcompleted.xlsx.
         """
         if self.quit!=1 : 
-            # t = Thread(target=self.current_sop)
-            # t.start()
+
             self.current_sop()
             time = datetime.now().time()
             if time.hour>=15 and time.minute>=20:
-                self.destroy()
-                self.delete_data_object(self.sn,self.date)
-                return
+                # self.destroy()
+                # self.delete_data_object(self.sn,self.date)
+                # return
+                pass
             try:
 
                 if ((self.csop)>=float(self.target_variable.get())) or ((self.csop) < float(self.sl_variable.get())) and (self.sld!=0 and self.targetd!=0):
@@ -1359,8 +1428,8 @@ class ManageOrder:
                     self.destroy()
                     return
                     
-            except:
-                pass
+            except Exception as e:
+                logging.error(e,exc_info=True)
 
             root.after(10000,self.update_widgets,self)
         else:
@@ -1391,7 +1460,7 @@ class ManageOrder:
                 #Trading symbol (zerodha)
                 tsymbol = exchange_name(name, convert_date(self.expiry_data[i]),self.strike_price[i],o)
                 #Place order
-                self.place_order(id_,slide,self.quantity[i],tsymbol,lot)
+                # self.place_order(id_,slide,self.quantity[i],tsymbol,lot)
 
     
     def pending_order(self):
@@ -1418,6 +1487,7 @@ class ManageOrder:
             print("order placed")
         except Exception as e:
             print("ERROR occured while placing square off order.",e)
+            logging.error(e,exc_info=True)
 
     def delete_data_object(self, sn, date):
         """
@@ -1437,7 +1507,7 @@ class ManageOrder:
             #     if d[0]==sn and d[1]==date:
             #         break
             #     row_count+=1
-            print("INDEX ",data.index)
+            
             row_count = data.index[0] + 2
             
             delete_thread = Thread(target=delete_data,args=(row_count,))
@@ -1447,7 +1517,7 @@ class ManageOrder:
             row[0] = last_cnum
             row+=[curdate,self.csop]
             last_cnum+=1
-            print(f"ROW {row}")
+
             insert_data(row,completed_df.columns,filename='.\\OrderData\\completed.xlsx')
 
     def update_delta(self):
@@ -1489,7 +1559,7 @@ def buy_ask_get():
         if 'NIFTY' in instrument.get():
             series='OPTIDX'
     except Exception as e:
-        print(e,"BUY ASK")
+        logging.error(e,exc_info=True)
     try :
 
         _, id_ = get_instru_id(instrument.get(),o,convert_date(expiry.get()),st1.get(),series)
@@ -1502,6 +1572,7 @@ def buy_ask_get():
     except Exception as e:
         print(e)
         messagebox.showerror("Error","Oops, something went wrong.\nTry again.")
+        logging.error(e,exc_info=True)
         return 0
         
     
@@ -1517,6 +1588,9 @@ def sys_login():
 
         except Exception as e:
             messagebox.showerror("Login Error",str(e))
+            logging.error(e,exc_info=True)
+        else:
+            messagebox.showinfo("Login Successful","Login for IFL API successful!")
         
     t = Thread(target=login,args=())
     t.start()
@@ -1526,8 +1600,15 @@ def kite_free_login():
     Login Function for KiteFree.
     """
     def login():
-        adpt = AdapterApi(None)
-        adpt.login_kitefree()
+
+        try:
+            adpt = AdapterApi(None)
+            adpt.login_kitefree()
+        except Exception as e:
+            messagebox.showerror("Error in Login",e)
+            logging.error(e,exc_info=True)
+        else:
+            messagebox.showinfo("Login Successful","Loged in to KiteFree API.")
 
     t = Thread(target=login,args=())
     t.start()
@@ -1538,10 +1619,12 @@ def pending_order_start():
         start_orders = Thread(target=start_last_orders)
         start_orders.start()
 
-    except xlrd.biffh.XLRDError:
+    except xlrd.biffh.XLRDErroras as x:
         messagebox.showerror("Error","Nothing in file.")
+        logging.error(x,exc_info=True)
     except Exception as e:
         messagebox.showerror("Error",e)
+        logging.error(e,exc_info=True)
 
 ###-main_###
 
@@ -1623,10 +1706,10 @@ lotdata2  = StringVar()
 lotdata3  = StringVar()
 lotdata4  = StringVar()
 
-premium1 = IntVar()
-premium2 = IntVar()
-premium3 = IntVar()
-premium4 = IntVar()
+premium1 = DoubleVar()
+premium2 = DoubleVar()
+premium3 = DoubleVar()
+premium4 = DoubleVar()
 
 sdelta = IntVar()
 tdelta = IntVar()

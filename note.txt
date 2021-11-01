@@ -33,10 +33,13 @@
 [X]. load open orders.
 [X]. add isop widget : create a thread lock in price_update Thread
 
+[X]. change date to time.
+[X]. add exit all.
+
 
 #Pending
-[]. change date to time.
-[]. add exit all.
+
+
 []. debug.
 
 

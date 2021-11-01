@@ -3,6 +3,11 @@ from ifl_api import MarketApi
 import requests
 import json
 from tkinter import messagebox
+import logging.config
+import traceback
+
+logging.config.fileConfig('.\\Logs\\log.ini',disable_existing_loggers=False)
+logging.getLogger(__name__)
 
 class AdapterApi():
 
@@ -31,11 +36,10 @@ class AdapterApi():
                 'Authorization':f'enctoken {self.enctoken}'
             }
  
-            print(data)
         
             r = requests.post('https://kite.zerodha.com/oms/orders/regular',data=data,headers=header,verify=False)
 
-            # print(r.json())
+            
             if r.status_code>300:
                 print(r.json())
                 raise Exception(r.json()['message'])
@@ -68,7 +72,7 @@ class AdapterApi():
             raise Exception(login1.json()['message'])
             
 
-        # print(login1.json())
+        
         request_id = login1.json()['data']['request_id']
         
         twofa_data = {
@@ -80,7 +84,7 @@ class AdapterApi():
         if login2.status_code>=300:
             raise Exception(login2.json()['message'])
         
-        # print(login2.json())
+        
         enctoken = session.cookies['enctoken']
 
         with open(".\\Tokens\\enctoken.txt","w")as file:
