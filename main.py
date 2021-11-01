@@ -27,6 +27,7 @@ logging.getLogger(__name__)
 BUY = "BUY"
 SELL = "SELL"
 EXIT_ALL = 0 
+TIME_LAG = 10000
 
 try:
     dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
@@ -1083,8 +1084,8 @@ def place_realorder():
                 def make_first_order(id_,slide,q,tradingsymbol,instru_lot_size,product_type):
                     Place.place_order(id_=id_,slide=slide,q=q,tradingsymbol=tradingsymbol,size=instru_lot_size,product_type=product_type)
 
-                # make_first_order(id_,slide,quant[j],tsymbol,instru_lot_size,product_type=product_value)
-                # 
+                make_first_order(id_,slide,quant[j],tsymbol,instru_lot_size,product_type=product_value)
+                
 
                 messagebox.showinfo("ORDER STATUS",f"{tsymbol} is placed!")
 
@@ -1410,10 +1411,10 @@ class ManageOrder:
             self.current_sop()
             time = datetime.now().time()
             if time.hour>=15 and time.minute>=20:
-                # self.destroy()
-                # self.delete_data_object(self.sn,self.date)
-                # return
-                pass
+                self.destroy()
+                self.delete_data_object(self.sn,self.date)
+                return
+                
             try:
 
                 if ((self.csop)>=float(self.target_variable.get())) or ((self.csop) < float(self.sl_variable.get())) and (self.sld!=0 and self.targetd!=0):
@@ -1431,7 +1432,7 @@ class ManageOrder:
             except Exception as e:
                 logging.error(e,exc_info=True)
 
-            root.after(10000,self.update_widgets,self)
+            root.after(TIME_LAG,self.update_widgets,self)
         else:
             print("DATA SAVED!")
 
@@ -1460,7 +1461,7 @@ class ManageOrder:
                 #Trading symbol (zerodha)
                 tsymbol = exchange_name(name, convert_date(self.expiry_data[i]),self.strike_price[i],o)
                 #Place order
-                # self.place_order(id_,slide,self.quantity[i],tsymbol,lot)
+                self.place_order(id_,slide,self.quantity[i],tsymbol,lot)
 
     
     def pending_order(self):
