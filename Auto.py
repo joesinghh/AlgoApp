@@ -1,9 +1,6 @@
-import sys
-import os
 import tkinter
 import tkinter.ttk
 
-__version__ = "1.1"
 
 # I may have broken the unicode...
 tkinter_umlauts=['odiaeresis', 'adiaeresis', 'udiaeresis', 'Odiaeresis', 'Adiaeresis', 'Udiaeresis', 'ssharp']

@@ -1,10 +1,9 @@
 from kiteconnect import KiteConnect
-from dotenv import load_dotenv
-import os
 import re
 import requests
 import pandas as pd
 import json
+
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 class Kite():

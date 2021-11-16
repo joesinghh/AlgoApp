@@ -2,9 +2,7 @@ from kite_api import Kite
 from ifl_api import MarketApi
 import requests
 import json
-from tkinter import messagebox
 import logging.config
-import traceback
 
 logging.config.fileConfig('.\\Logs\\log.ini',disable_existing_loggers=False)
 logging.getLogger(__name__)
@@ -71,8 +69,6 @@ class AdapterApi():
         if login1.status_code>=300:
             raise Exception(login1.json()['message'])
             
-
-        
         request_id = login1.json()['data']['request_id']
         
         twofa_data = {
@@ -91,7 +87,7 @@ class AdapterApi():
             file.write(enctoken)
             self.enctoken = enctoken
             print("Login Successful, enctoken generated")
-
+            
 if __name__=="__main__":
     a = AdapterApi(None)
 

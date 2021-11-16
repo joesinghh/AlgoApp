@@ -1,22 +1,17 @@
-from numpy.core.arrayprint import DatetimeFormat
-from numpy.lib.function_base import insert
 from kite_api import Kite
 from tkinter import *
 from threading import Thread, Lock
-from tkinter.ttk import Combobox
-from numpy.core.fromnumeric import product
 from ifl_api import MarketApi
 from tkinter import messagebox
 import pandas as pd
-from datetime import date,datetime
-from handlefile import delete_data, fetch_data, insert_data, insert_data_main, fetch_data, change_data
+from datetime import datetime
+from handlefile import delete_data, fetch_data, insert_data, fetch_data, change_data
 from Auto import AutocompleteCombobox
 import platform
 import time
 import xlrd
 from Adapter import AdapterApi
 from exchange import exchange_name, convert_date
-import numpy as np
 import logging.config
 import traceback
 
@@ -27,7 +22,14 @@ logging.getLogger(__name__)
 BUY = "BUY"
 SELL = "SELL"
 EXIT_ALL = 0 
-TIME_LAG = 10000
+
+#Milisecconds 
+CALL_FEQ = 10000
+NEW_CALL_FEQ = 3000
+
+#Seconds
+TARGETDIFF = 3
+SLDIFF = 3
 
 try:
     dataframe = pd.read_excel(".\\OrderData\\order_data.xlsx")
@@ -1254,6 +1256,7 @@ class ManageOrder:
         self.tdelta_var = StringVar()
         self.sldelta_var.set(str(self.sld))
         self.tdelta_var.set(str(self.targetd))
+        self.MINISEC = CALL_FEQ
 
 
     def display_symbol(self):
@@ -1321,6 +1324,8 @@ class ManageOrder:
         
         self.csop = sop 
         self.currsop['text'] = f"{self.csop:.2f}" #update current sop
+        print(self.currsop['text'])
+        print("Sec : ",self.MINISEC)
         self.profit_loss() # to update profit/loss
 
     def profit_loss(self):
@@ -1415,13 +1420,17 @@ class ManageOrder:
                 self.delete_data_object(self.sn,self.date)
                 return
                 
+                
             try:
-
+               
                 if ((self.csop)>=float(self.target_variable.get())) or ((self.csop) < float(self.sl_variable.get())) and (self.sld!=0 and self.targetd!=0):
                     self.square_off()
                     self.delete_data_object(self.sn,self.date)
                     self.destroy()
                     return 
+
+                elif (((self.csop)<float(self.target_variable.get()) and abs(float(self.csop)-float(self.target_variable.get()))<=TARGETDIFF) or ((self.csop)>float(self.sl_variable.get()) and abs(float(self.csop)-float(self.sl_variable.get()))<=SLDIFF)) and (self.sld!=0 and self.targetd!=0):
+                    self.MINISEC = NEW_CALL_FEQ
                     
                 elif EXIT_ALL:
                     self.square_off()
@@ -1429,10 +1438,13 @@ class ManageOrder:
                     self.destroy()
                     return
                     
+                else:
+                    self.MINISEC = CALL_FEQ
+                    
             except Exception as e:
                 logging.error(e,exc_info=True)
 
-            root.after(TIME_LAG,self.update_widgets,self)
+            root.after(self.MINISEC,self.update_widgets,self)
         else:
             print("DATA SAVED!")
 
@@ -1501,13 +1513,6 @@ class ManageOrder:
         pending_df = pd.read_excel('.\\OrderData\\notcompleted.xlsx')
         data = pending_df.loc[(pending_df[columns[0]]==sn) & (pending_df[columns[1]]==date)]
         if data.values.tolist:
-            # row_count = 1
-            # all_data = fetch_data('.\\OrderData\\notcompleted.xlsx')
-            # for d in all_data:
-
-            #     if d[0]==sn and d[1]==date:
-            #         break
-            #     row_count+=1
             
             row_count = data.index[0] + 2
             

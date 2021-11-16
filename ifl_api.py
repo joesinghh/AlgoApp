@@ -1,12 +1,8 @@
 import logging
-import traceback
 import requests
-import os
 from dotenv import load_dotenv
-from requests.api import request
 import json
 import logging.config
-import traceback
 
 logging.config.fileConfig('.\\Logs\\log.ini',disable_existing_loggers=False)
 logging.getLogger(__name__)
