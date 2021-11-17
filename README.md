@@ -1,18 +1,19 @@
-# AlgoApp
+## AlgoApp - Algo trading desktop application.
 
-## An Algo trading desktop application.
 
-### INSTALLATION
+### Installation
 
-Install required modules : 
+Install dependencies:
 
 ```pip install -r requirements.txt```
+
 
 Run `main.py` : 
 
 ```python main.py```
 
-### USEAGE
+### Notes on usage
 
-- Add suitable credentials in `/Config`
-- Login from Application
+- Add suitable API Keys in `/Config`.
+- Login from Application.
+- Place Orders.
