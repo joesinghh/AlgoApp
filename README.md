@@ -1,6 +1,6 @@
 ## AlgoApp - Algo trading desktop application.
 
-[![GitHub](https://img.shields.io/github/license/Joe-Sin7h/AlgoApp)]()
+<!-- [![GitHub](https://img.shields.io/github/license/Joe-Sin7h/AlgoApp)]() -->
 
 Application makes use of several APIs like IFL api, Zerodha paid api and Zerodha free api. For using the application user must have demat account on anyone of these platforms (i.e **IFL** or **Zerodha** ). 
 
