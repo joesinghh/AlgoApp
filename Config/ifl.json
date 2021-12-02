@@ -1,13 +1,13 @@
 {
     "marketdata":{
-        "secretKey" : "Mtmx865#dj",
-        "appKey" : "162acff6999b23969a7665",
+        "secretKey" : "",
+        "appKey" : "",
         "source" : "WEBAPI"
     },
 
     "interactive":{
-        "secretKey" : "Nywb610$jQ",
-        "appKey" : "f33b529d1451b74526a640",
+        "secretKey" : "",
+        "appKey" : "",
         "source" : "WEBAPI"
     }
     
