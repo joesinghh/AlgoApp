@@ -1,18 +1,20 @@
-# AlgoApp
+## AlgoApp - Algo trading desktop application.
 
-## An Algo trading desktop application.
+Application make use of several APIs like IFL api, Zerodha paid api and Zerodha free api. For using the application user must have demat account on anyone of these platforms (i.e **IFL** or **Zerodha** ). 
 
-### INSTALLATION
+### Installation
 
-Install required modules : 
+Install dependencies:
 
 ```pip install -r requirements.txt```
 
-Run `main.py` : 
+
+Run application : 
 
 ```python main.py```
 
-### USEAGE
+### Notes on usage
 
-- Add suitable credentials in `/Config`
-- Login from Application
+- Add suitable API Keys in `/Config`.
+- Login from Application.
+- Place Orders.
