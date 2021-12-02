@@ -4,6 +4,7 @@
 
 Application makes use of several APIs like IFL api, Zerodha paid api and Zerodha free api. For using the application user must have demat account on anyone of these platforms (i.e **IFL** or **Zerodha** ). 
 
+![](https://raw.githubusercontent.com/Joe-Sin7h/AlgoApp/main/application.JPG?raw=true)
 ### Installation
 
 Install dependencies:
