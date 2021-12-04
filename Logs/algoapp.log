@@ -412,3 +412,109 @@ IndexError: single positional indexer is out-of-bounds
 2021-12-02 19:45:46,937 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
 2021-12-02 19:45:46,937 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
 2021-12-02 19:45:47,030 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:04:43,916 root - ERROR:single positional indexer is out-of-bounds
+Traceback (most recent call last):
+  File "main.py", line 42, in <module>
+    last_num = dataframe['SN'].iloc[-1]
+  File "C:\Users\amarendra singh\miniconda3\lib\site-packages\pandas\core\indexing.py", line 1768, in __getitem__
+    return self._getitem_axis(maybe_callable, axis=axis)
+  File "C:\Users\amarendra singh\miniconda3\lib\site-packages\pandas\core\indexing.py", line 2138, in _getitem_axis
+    self._validate_integer(key, axis)
+  File "C:\Users\amarendra singh\miniconda3\lib\site-packages\pandas\core\indexing.py", line 2063, in _validate_integer
+    raise IndexError("single positional indexer is out-of-bounds")
+IndexError: single positional indexer is out-of-bounds
+2021-12-02 20:04:43,918 root - ERROR:single positional indexer is out-of-bounds
+Traceback (most recent call last):
+  File "main.py", line 48, in <module>
+    last_cnum = dataframe['SN'].iloc[-1]
+  File "C:\Users\amarendra singh\miniconda3\lib\site-packages\pandas\core\indexing.py", line 1768, in __getitem__
+    return self._getitem_axis(maybe_callable, axis=axis)
+  File "C:\Users\amarendra singh\miniconda3\lib\site-packages\pandas\core\indexing.py", line 2138, in _getitem_axis
+    self._validate_integer(key, axis)
+  File "C:\Users\amarendra singh\miniconda3\lib\site-packages\pandas\core\indexing.py", line 2063, in _validate_integer
+    raise IndexError("single positional indexer is out-of-bounds")
+IndexError: single positional indexer is out-of-bounds
+2021-12-02 20:04:44,069 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:04:44,572 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/expiryDate?exchangeSegment=2&series=OPTIDX&symbol=NIFTY HTTP/1.1" 200 None
+2021-12-02 20:04:57,299 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:04:57,445 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/auth/login HTTP/1.1" 200 None
+2021-12-02 20:04:57,448 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:04:57,572 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /interactive/user/session HTTP/1.1" 200 None
+2021-12-02 20:05:29,037 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:29,886 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:29,890 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:30,037 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:31,810 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:31,941 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:31,958 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:31,967 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:31,968 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:31,968 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:32,080 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:32,084 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:32,167 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:32,168 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:32,170 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:32,175 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:32,213 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:32,317 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:37,192 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:37,195 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:37,222 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:37,321 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:37,333 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:37,352 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:37,356 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:37,384 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:37,451 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:37,454 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:37,505 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:37,589 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:42,341 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:42,402 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:42,512 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:42,606 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:42,790 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:42,791 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:42,818 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:42,822 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:43,217 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:43,768 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:43,772 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:43,914 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:47,806 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:47,807 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:47,942 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:47,994 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:48,228 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:48,410 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:48,414 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:48,567 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:48,926 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:49,039 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:49,043 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:49,169 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:52,961 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:53,009 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:53,218 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:53,369 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:53,587 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:53,702 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:53,707 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:53,854 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:54,176 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:54,293 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:54,298 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:54,410 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:58,238 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:58,378 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:58,406 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:58,539 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:58,874 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:59,037 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18500 HTTP/1.1" 200 None
+2021-12-02 20:05:59,041 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:59,177 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
+2021-12-02 20:05:59,426 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:59,535 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "GET /apimarketdata/instruments/instrument/optionSymbol?exchangeSegment=2&series=OPTIDX&symbol=NIFTY&expiryDate=09Dec2021&optionType=CE&strikePrice=18000 HTTP/1.1" 200 None
+2021-12-02 20:05:59,551 urllib3.connectionpool - DEBUG:Starting new HTTPS connection (1): ttblaze.iifl.com:443
+2021-12-02 20:05:59,666 urllib3.connectionpool - DEBUG:https://ttblaze.iifl.com:443 "POST /apimarketdata/instruments/quotes HTTP/1.1" 200 None
